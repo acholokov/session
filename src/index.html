@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Сессия — трекер подготовки к экзаменам</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="margin-line"></div>
+<div class="wm">%</div>
+
+<div class="wrap">
+  <header class="masthead">
+    <button class="btn small" id="btnBack" hidden>← Предметы</button>
+    <div class="logo">
+      <div class="mark"><svg viewBox="0 0 24 24"><path d="M4 13l5 5L20 6"/></svg></div>
+      <div><h1>СЕССИЯ</h1><small>трекер подготовки</small></div>
+    </div>
+    <input id="examName" hidden placeholder="Название предмета…" maxlength="60">
+    <button class="btn small" id="btnCloud" title="Облачная синхронизация">
+      <span class="cloud-dot" id="cloudDot"></span><span class="lbl" id="cloudLbl">локально</span>
+    </button>
+    <button class="btn small" id="btnEdit" hidden>⚙ Настройка</button>
+  </header>
+
+  <!-- ЭКРАН ВЫБОРА ПРЕДМЕТА -->
+  <section id="subjectsView" hidden>
+    <div class="subj-head">
+      <h2>Мои <b>предметы</b></h2>
+      <span class="count" id="subjCount"></span>
+      <button class="btn primary" id="btnAddTop">＋ Новый предмет</button>
+    </div>
+
+    <aside class="card cal-card">
+      <div class="cal-head">
+        <button type="button" class="cal-nav" id="calPrev" title="Предыдущий месяц">‹</button>
+        <div class="cal-title" id="calTitle"></div>
+        <button type="button" class="cal-todaybtn" id="calToday">сегодня</button>
+        <button type="button" class="cal-nav" id="calNext" title="Следующий месяц">›</button>
+      </div>
+      <div class="cal-sub" id="calSub"></div>
+      <div class="cal-dow">
+        <span>пн</span><span>вт</span><span>ср</span><span>чт</span><span>пт</span>
+        <span class="we">сб</span><span class="we">вс</span>
+      </div>
+      <div class="cal-cells" id="calCells"></div>
+      <div class="up-title">Ближайшие экзамены</div>
+      <div class="up-list" id="upList"></div>
+    </aside>
+
+    <div class="subj-grid" id="subjGrid"></div>
+  </section>
+
+  <!-- ЭКРАН СОЗДАНИЯ ПРЕДМЕТА -->
+  <section id="setupView" class="setup-outer" hidden>
+    <form class="card setup" id="setupForm">
+      <div class="head"><span class="sticker">НОВЫЙ ПЛАН</span><span style="font:700 17px 'Unbounded'" id="setupTitle">Подготовка к экзамену</span></div>
+      <div class="fgrid">
+        <div class="full"><label>Название предмета</label><input type="text" id="fName" placeholder="например, Теория вероятностей" maxlength="60"></div>
+        <div><label>Дата экзамена</label><input type="date" id="fExam" required></div>
+        <div><label>Дата старта</label><input type="date" id="fStart" required></div>
+        <div class="full"><label>Сколько вопросов в билетах</label><input type="number" id="fTotal" min="1" max="2000" value="40" required></div>
+      </div>
+      <div class="preview" id="fPreview"></div>
+      <button class="btn primary" type="submit">Создать и рассчитать план →</button>
+    </form>
+  </section>
+
+  <!-- ДАШБОРД -->
+  <main id="dash" hidden>
+    <section class="strip">
+      <div class="tear"><span class="big" id="dNum">—</span><span class="w" id="dWord">дней до экзамена</span></div>
+      <div class="strip-info">
+        <div class="date" id="examDateStr"></div>
+        <div class="hrs" id="hrsLine"></div>
+        <div class="plan" id="planLine"></div>
+        <button type="button" class="btn small" id="btnResult">🏁 Экзамен завершен</button>
+      </div>
+    </section>
+
+    <div class="grid">
+      <article class="card s7">
+        <div class="stamp">ВСЁ ВЫУЧЕНО</div>
+        <div class="ct">Материал<span class="n">01</span></div>
+        <div class="mat-top">
+          <div class="pct-big"><span id="matPct">0</span><span>%</span></div>
+          <div class="mat-nums">
+            <span class="pill ok"><b id="doneCnt">0</b> выучено</span>
+            <span class="pill left"><b id="leftCnt">0</b> осталось · <span id="leftPct">0%</span></span>
+          </div>
+        </div>
+        <div class="track"><div class="fill" id="fill"></div><div class="plan-flag" id="planFlag"><i></i></div></div>
+        <div class="mat-hint" id="matHint"></div>
+      </article>
+
+      <article class="card s5">
+        <div class="ct">Run rate<span class="n">02</span></div>
+        <div class="dev-big" id="devVal">0%</div>
+        <div class="note" id="devNote"></div>
+        <div class="gauge"><div class="mid"></div><div class="needle" id="needle"></div></div>
+        <div class="gauge-lbl"><span>← позади</span><span>по плану</span><span>впереди →</span></div>
+        <div class="pace" id="paceNote"></div>
+      </article>
+
+      <article class="card s5">
+        <div class="ct">Время<span class="n">03</span></div>
+        <div class="note">осталось продуктивных часов (3 ч/день)</div>
+        <div class="hours-big"><span id="hoursBig">0</span> <em>часов</em></div>
+        <div class="rows">
+          <div><span>Осталось дней</span><b id="tDaysLeft">—</b></div>
+          <div><span>Минут на оставшийся вопрос</span><b id="minPerQ">—</b></div>
+          <div><span>По плану вопросов в день</span><b id="perDayVal">—</b></div>
+          <div><span>Нужно в день, чтобы успеть</span><b id="reqNow">—</b></div>
+        </div>
+        <div class="note" id="elapsedTxt"></div>
+        <div class="tbar"><div class="tf" id="tFill"></div></div>
+      </article>
+
+      <article class="card s7 chart">
+        <div class="ct">План × факт<span class="n">04</span></div>
+        <div id="chartBox"></div>
+        <div class="lg"><span><i class="l1"></i>выучено</span><span><i class="l2"></i>план</span><span><i class="l3"></i>сегодня</span></div>
+      </article>
+
+      <article class="card s12 rules">
+        <div class="ct">Вопросы<span class="n">05</span></div>
+        <div class="qbar">
+          <div class="tabs">
+            <button type="button" class="tab on" data-f="all">Все <b id="cAll">0</b></button>
+            <button type="button" class="tab" data-f="todo">Осталось <b id="cTodo">0</b></button>
+            <button type="button" class="tab" data-f="done">Изучено <b id="cDone">0</b></button>
+          </div>
+          <span class="qcount" id="visCount"></span>
+          <div class="grp">
+            <button type="button" class="btn primary small" id="btnNext">Отметить следующий</button>
+            <button type="button" class="btn small" id="btnUndo">↩ Отменить</button>
+            <button type="button" class="btn danger small" id="btnClear">Сбросить отметки</button>
+          </div>
+        </div>
+        <div class="qgrid" id="qgrid" data-f="all"></div>
+        <div class="hint">Кликай по номеру, когда изучил вопрос. Быстрая отметка — клавиша <kbd>N</kbd>.</div>
+      </article>
+    </div>
+  </main>
+
+  <footer>
+    3 продуктивных часа в день · данные хранятся в браузере, при входе в аккаунт — синхронизируются с облаком ·
+    <button id="btnExport" title="Скачать резервную копию всех предметов">экспорт</button> ·
+    <button id="btnImport" title="Загрузить резервную копию">импорт</button> ·
+    <button id="btnWipe" class="danger-l">удалить все данные</button>
+  </footer>
+  <input type="file" id="fileImport" accept=".json,application/json" hidden>
+</div>
+
+<div id="toast">✓ сохранено</div>
+
+<dialog id="dlg">
+  <form id="dlgForm">
+    <div class="ct">Настройка предмета</div>
+    <div class="fgrid">
+      <div class="full"><label>Название предмета</label><input type="text" id="eName" maxlength="60"></div>
+      <div><label>Дата экзамена</label><input type="date" id="eExam" required></div>
+      <div><label>Дата старта</label><input type="date" id="eStart" required></div>
+      <div class="full"><label>Количество вопросов</label><input type="number" id="eTotal" min="1" max="2000" required></div>
+    </div>
+    <div class="zone">
+      <button type="button" class="btn danger small" id="btnMarksReset">Сбросить отметки</button>
+      <button type="button" class="btn danger small" id="btnDeleteSubj">Удалить предмет</button>
+      <span style="flex:1"></span>
+      <button type="button" class="btn small" id="btnCancel">Отмена</button>
+      <button type="submit" class="btn primary small">Сохранить</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ОКНО РЕЗУЛЬТАТА ЭКЗАМЕНА -->
+<dialog id="resultDlg">
+  <div class="ct">Результат экзамена</div>
+  <div class="note" id="resSubjectName" style="margin-bottom:12px"></div>
+  <div class="res-options">
+    <label class="res-opt"><input type="radio" name="resType" value="pending"><span>⏳ Ожидание результатов</span></label>
+    <label class="res-opt"><input type="radio" name="resType" value="grade"><span>🎓 Оценка</span>
+      <select id="resGrade">
+        <option value="5">5 — отлично</option>
+        <option value="4">4 — хорошо</option>
+        <option value="3">3 — удовлетворительно</option>
+        <option value="2">2 — неудовлетворительно</option>
+      </select>
+    </label>
+    <label class="res-opt"><input type="radio" name="resType" value="score"><span>🎯 Баллы</span>
+      <input type="number" id="resScore" min="0" max="100" placeholder="0–100">
+    </label>
+  </div>
+  <div class="auth-status" id="resStatus"></div>
+  <div class="auth-btns">
+    <button type="button" class="btn primary small" id="resSave">Сохранить</button>
+    <button type="button" class="btn danger small" id="resClear" hidden>Снять завершение</button>
+    <span style="flex:1"></span>
+    <button type="button" class="btn small" data-close3>Закрыть</button>
+  </div>
+</dialog>
+
+<!-- ОКНО ОБЛАКА -->
+<dialog id="authDlg">
+  <div class="ct">Облачная синхронизация</div>
+  <div id="authNotConfigured" class="auth-hint">
+    <b>Синхронизация пока не настроена</b> — приложение работает локально.<br><br>
+    1. Создайте бесплатный проект на <b>supabase.com</b>.<br>
+    2. В SQL Editor выполните скрипт создания таблицы <code>app_state</code>.<br>
+    3. Скопируйте URL проекта и <code>anon key</code> (Settings → API) в константы в начале кода.<br>
+    4. Чтобы входить сразу после регистрации, снимите <code>Confirm email</code> (Authentication → Providers → Email).
+  </div>
+  <form id="authForm" hidden>
+    <div class="fgrid">
+      <div class="full"><label>Email</label><input type="email" id="aEmail" required placeholder="you@example.com" autocomplete="email"></div>
+      <div class="full"><label>Пароль</label><input type="password" id="aPass" required minlength="6" placeholder="минимум 6 символов" autocomplete="current-password"></div>
+    </div>
+    <div class="auth-status" id="authStatus"></div>
+    <div class="auth-btns">
+      <button type="submit" class="btn primary small">Войти</button>
+      <button type="button" class="btn small" id="btnSignUp">Создать аккаунт</button>
+      <span style="flex:1"></span>
+      <button type="button" class="btn small" data-close>Закрыть</button>
+    </div>
+  </form>
+  <div id="authUser" hidden>
+    <div class="auth-user-line">Вы вошли как <b id="authEmail"></b></div>
+    <div class="note" id="lastSyncLine">последняя синхронизация: —</div>
+    <div class="auth-btns" style="margin-top:14px">
+      <button type="button" class="btn primary small" id="btnSyncNow">⟳ Синхронизировать сейчас</button>
+      <button type="button" class="btn danger small" id="btnSignOut">Выйти</button>
+      <span style="flex:1"></span>
+      <button type="button" class="btn small" data-close>Закрыть</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
