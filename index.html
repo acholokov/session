@@ -276,9 +276,11 @@ label{display:block;font:600 10.5px 'JetBrains Mono';letter-spacing:1.5px;text-t
 .preview b{font-family:'JetBrains Mono'}
 .setup .btn.primary{margin-top:18px;width:100%;font-size:16px;padding:13px}
 dialog{border:2px solid var(--ink);border-radius:12px;padding:26px;width:min(600px,92vw);background:var(--card);
-  box-shadow:10px 12px 0 rgba(23,32,47,.2)}
+  box-shadow:10px 12px 0 rgba(23,32,47,.2);position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);margin:0}
 dialog::backdrop{background:rgba(23,32,47,.45)}
 dialog .zone{margin-top:20px;border-top:2px dashed rgba(229,72,77,.4);padding-top:16px;display:flex;gap:10px;flex-wrap:wrap}
+dialog.draggable{cursor:move}
+dialog.dragging{user-select:none}
 .auth-status{font:500 12.5px 'JetBrains Mono';min-height:18px;margin:12px 0 4px;color:var(--ink-soft)}
 .auth-status.err{color:var(--red)}
 .auth-status.ok{color:var(--green)}
@@ -1278,6 +1280,35 @@ function confetti(){
 route();
 initCloud();
 setInterval(()=>{ if(!$('#dash').hidden && active()) renderStats(false); }, 60000);
+
+/* ═══════════ перетаскивание диалогов ═══════════ */
+let dragDlg=null, dragOffX=0, dragOffY=0;
+function makeDraggable(dlg){
+  dlg.addEventListener('mousedown', e=>{
+    if(e.target.closest('[data-close], [data-close3], button, input, select, label, .zone, .res-options, form')) return;
+    dragDlg=dlg;
+    const rect=dlg.getBoundingClientRect();
+    dragOffX=e.clientX-rect.left;
+    dragOffY=e.clientY-rect.top;
+    dlg.classList.add('dragging');
+    dlg.style.transform='none';
+    dlg.style.left=(e.clientX-dragOffX)+'px';
+    dlg.style.top=(e.clientY-dragOffY)+'px';
+    e.preventDefault();
+  });
+}
+document.addEventListener('mousemove', e=>{
+  if(!dragDlg) return;
+  dragDlg.style.left=(e.clientX-dragOffX)+'px';
+  dragDlg.style.top=(e.clientY-dragOffY)+'px';
+});
+document.addEventListener('mouseup', ()=>{
+  if(dragDlg){ dragDlg.classList.remove('dragging'); dragDlg=null; }
+});
+['#dlg','#resultDlg','#authDlg'].forEach(sel=>{
+  const d=document.querySelector(sel);
+  if(d){ d.classList.add('draggable'); makeDraggable(d); }
+});
 </script>
 </body>
 </html>
