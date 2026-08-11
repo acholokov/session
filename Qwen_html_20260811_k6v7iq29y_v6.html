@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Сессия — трекер подготовки к экзаменам</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Golos+Text:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f3f0e4; --card:#fffdf6; --ink:#17202f; --ink-soft:#5b6577;
+  --yellow:#ffd23f; --yellow-soft:#fff3c2; --red:#e5484d; --green:#1e9e5a;
+  --blue:#2f6fed; --grid:rgba(70,112,182,.15);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font:400 15px/1.55 'Golos Text',system-ui,sans-serif;color:var(--ink);
+  background-color:var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:27px 27px;
+  min-height:100vh;
+}
+.margin-line{position:fixed;top:0;bottom:0;left:66px;width:2px;background:rgba(229,72,77,.3);z-index:0;pointer-events:none}
+.wm{position:fixed;right:-4%;bottom:-14%;font:900 46vh 'Unbounded';color:var(--ink);opacity:.04;z-index:0;pointer-events:none;user-select:none;line-height:1}
+.wrap{max-width:1160px;margin:0 auto;padding:26px 26px 70px;position:relative;z-index:1}
+[hidden]{display:none!important}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+
+/* ── шапка ─────────────────────────────── */
+.masthead{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:22px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo .mark{width:44px;height:44px;background:var(--ink);border-radius:9px;display:grid;place-items:center;
+  box-shadow:3px 3px 0 var(--yellow);transform:rotate(-3deg);transition:transform .25s}
+.logo:hover .mark{transform:rotate(4deg) scale(1.06)}
+.logo .mark svg{width:24px;height:24px;stroke:var(--yellow);stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.logo h1{font:900 22px 'Unbounded';letter-spacing:1px}
+.logo small{display:block;font:600 10px 'JetBrains Mono';letter-spacing:2.5px;color:var(--ink-soft);text-transform:uppercase}
+#examName{flex:1;min-width:180px;font:700 17px 'Golos Text';color:var(--ink);background:transparent;border:none;
+  border-bottom:2px dashed rgba(23,32,47,.35);padding:6px 4px;outline:none;transition:border-color .2s}
+#examName:focus{border-bottom:2px solid var(--yellow)}
+.masthead #btnCloud{margin-left:auto;display:inline-flex;align-items:center;max-width:240px}
+.cloud-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:8px;background:#9aa3b2;flex:none}
+.cloud-dot.ok{background:var(--green)}
+.cloud-dot.busy{background:#e8a013;animation:pulse .9s infinite}
+.cloud-dot.err{background:var(--red)}
+@keyframes pulse{50%{opacity:.35}}
+#btnCloud .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+
+/* ── кнопки ────────────────────────────── */
+.btn{font:600 14px 'Golos Text';padding:10px 16px;border:2px solid var(--ink);border-radius:8px;background:var(--card);
+  color:var(--ink);box-shadow:3px 3px 0 rgba(23,32,47,.18);transition:transform .13s,box-shadow .13s}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 rgba(23,32,47,.18)}
+.btn:active{transform:translate(2px,2px);box-shadow:0 0 0 transparent}
+.btn.primary{background:var(--ink);color:#fff;box-shadow:3px 3px 0 var(--yellow)}
+.btn.primary:hover{box-shadow:5px 5px 0 var(--yellow)}
+.btn.danger{color:var(--red);border-color:var(--red);box-shadow:3px 3px 0 rgba(229,72,77,.22)}
+.btn.small{padding:7px 12px;font-size:13px}
+
+/* ── карточки дашборда ─────────────────── */
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+.s5{grid-column:span 5}.s7{grid-column:span 7}.s12{grid-column:1/-1}
+.card{background:var(--card);border:2px solid var(--ink);border-radius:10px;padding:22px 24px;position:relative;
+  box-shadow:6px 7px 0 rgba(23,32,47,.1);animation:rise .5s both}
+.grid > :nth-child(1){animation-delay:.03s}.grid > :nth-child(2){animation-delay:.09s}
+.grid > :nth-child(3){animation-delay:.15s}.grid > :nth-child(4){animation-delay:.21s}
+.grid > :nth-child(5){animation-delay:.27s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.ct{font:700 13px 'Unbounded';letter-spacing:1.6px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.ct::before{content:'';width:10px;height:10px;background:var(--yellow);border:2px solid var(--ink);border-radius:2px;transform:rotate(45deg)}
+.ct .n{margin-left:auto;font:600 11px 'JetBrains Mono';color:var(--ink-soft);letter-spacing:1px}
+.note{font:500 12.5px 'JetBrains Mono';color:var(--ink-soft)}
+
+/* ── экран «Мои предметы» ──────────────── */
+.subj-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:6px 0 24px}
+.subj-head h2{font:900 clamp(26px,4vw,40px) 'Unbounded';line-height:1.1}
+.subj-head h2 b{background:linear-gradient(transparent 58%,var(--yellow) 58%);padding:0 4px}
+.subj-head .count{font:600 12px 'JetBrains Mono';color:var(--ink-soft);background:#fff;border:2px solid var(--ink);padding:5px 13px;border-radius:99px}
+.subj-head .btn{margin-left:auto}
+
+/* календарь — во всю ширину */
+.cal-card{padding:20px 22px;margin-bottom:20px}
+.cal-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.cal-title{flex:1;text-align:center;font:700 17px 'Unbounded'}
+.cal-nav{width:34px;height:34px;border:2px solid var(--ink);background:#fff;border-radius:8px;font-size:17px;line-height:1;
+  transition:.15s;box-shadow:2px 2px 0 rgba(23,32,47,.15);flex:none}
+.cal-nav:hover{background:var(--yellow);transform:translateY(-1px)}
+.cal-nav:active{transform:translateY(1px);box-shadow:none}
+.cal-todaybtn{border:2px solid transparent;background:transparent;font:600 10.5px 'JetBrains Mono';letter-spacing:1px;
+  text-transform:uppercase;color:var(--ink-soft);padding:6px 8px;border-radius:6px;transition:.15s;flex:none}
+.cal-todaybtn:hover{color:var(--ink);background:var(--yellow-soft)}
+.cal-sub{font:500 11.5px 'JetBrains Mono';color:var(--ink-soft);text-align:center;margin-bottom:12px}
+.cal-dow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));text-align:center;font:600 10.5px 'JetBrains Mono';
+  letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px}
+.cal-dow .we{color:var(--red)}
+.cal-cells{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.cal-day{min-height:64px;min-width:0;border:1.5px solid rgba(23,32,47,.14);border-radius:7px;background:#fff;padding:4px 5px;
+  display:flex;flex-direction:column;gap:3px;transition:border-color .15s,background .15s;overflow:hidden}
+.cal-day:hover{border-color:rgba(23,32,47,.45)}
+.cal-day.today{background:var(--yellow-soft);border:2px solid var(--ink);box-shadow:2px 2px 0 rgba(23,32,47,.2)}
+.cal-num{font:600 11px 'JetBrains Mono';width:18px;height:18px;display:grid;place-items:center;border-radius:5px;flex:none}
+.cal-day.today .cal-num{background:var(--ink);color:var(--yellow)}
+.cal-day.we .cal-num{color:var(--red)}
+.cal-blank{min-height:64px}
+.cal-ev{display:block;width:100%;min-width:0;border:none;border-radius:5px;color:#fff;font:600 10.5px 'Golos Text';padding:2.5px 6px;
+  text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:transform .15s,filter .15s;
+  box-shadow:1px 1px 0 rgba(23,32,47,.3)}
+.cal-ev:hover{transform:translateX(2px);filter:brightness(1.12)}
+.cal-ev.done-ev::before{content:'✓ '}
+.cal-more{font:600 10px 'JetBrains Mono';color:var(--ink-soft);padding-left:4px}
+.up-title{margin-top:18px;font:700 11px 'JetBrains Mono';letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-soft);
+  border-top:2px dashed rgba(23,32,47,.2);padding-top:14px;margin-bottom:10px}
+.up-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.up-item{display:flex;align-items:center;gap:9px;width:100%;background:#fff;border:2px solid rgba(23,32,47,.15);
+  border-radius:8px;padding:9px 12px;text-align:left;transition:.15s}
+.up-item:hover{background:var(--yellow-soft);border-color:var(--ink);transform:translateY(-2px)}
+.up-dot{width:10px;height:10px;border-radius:3px;flex:none;border:1.5px solid rgba(23,32,47,.4)}
+.up-name{flex:1;font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.up-when{font:600 11px 'JetBrains Mono';color:var(--ink-soft);white-space:nowrap}
+
+/* карточки предметов — под календарём */
+.subj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(262px,1fr));gap:18px}
+.subj-card{background:var(--card);border:2px solid var(--ink);border-radius:12px;padding:20px;position:relative;cursor:pointer;
+  box-shadow:6px 7px 0 rgba(23,32,47,.1);transition:transform .15s,box-shadow .15s;animation:rise .5s both}
+.subj-card:hover{transform:translate(-3px,-3px);box-shadow:9px 10px 0 rgba(23,32,47,.15)}
+.subj-card h3{font:700 16px 'Unbounded';line-height:1.35;margin:2px 62px 12px 0;word-break:break-word}
+.subj-dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;border:1.5px solid rgba(23,32,47,.4)}
+.subj-del{position:absolute;top:12px;right:12px;width:28px;height:28px;border:2px solid transparent;background:transparent;
+  border-radius:7px;font-size:16px;line-height:1;color:var(--ink-soft);transition:.18s}
+.subj-del:hover{color:#fff;background:var(--red);border-color:var(--red);transform:rotate(90deg)}
+.subj-flag{position:absolute;top:12px;right:44px;width:28px;height:28px;border:2px solid transparent;background:transparent;
+  border-radius:7px;font-size:14px;line-height:1;transition:.18s}
+.subj-flag:hover{background:var(--yellow-soft);border-color:var(--ink);transform:translateY(-1px)}
+.subj-pct{font:900 42px/1 'Unbounded'}
+.subj-pct span{font-size:.5em;font-weight:700}
+.subj-track{height:12px;border:2px solid var(--ink);border-radius:99px;background:#fff;overflow:hidden;margin:10px 0 13px}
+.subj-track div{height:100%;background:repeating-linear-gradient(-55deg,var(--yellow) 0 8px,#f2bd2e 8px 16px);transition:width .6s}
+.subj-meta{display:flex;flex-direction:column;gap:5px;font:500 12.5px 'JetBrains Mono';color:var(--ink-soft);margin-bottom:13px}
+.subj-meta .warn{color:var(--red);font-weight:600}
+.subj-badge{display:inline-block;font:700 12px 'JetBrains Mono';padding:4px 11px;border-radius:99px;border:2px solid}
+.subj-badge.up{color:var(--green);border-color:var(--green);background:#e7f4ec}
+.subj-badge.down{color:var(--red);border-color:var(--red);background:#fdecec}
+.subj-badge.flat{color:var(--ink-soft);border-color:rgba(23,32,47,.3);background:#fff}
+button.subj-badge{cursor:pointer;transition:.15s}
+button.subj-badge:hover{transform:translateY(-1px);box-shadow:2px 2px 0 rgba(23,32,47,.2)}
+.subj-badge.res{color:#fff;background:var(--ink);border-color:var(--ink)}
+.subj-badge.res.pending{color:var(--ink-soft);background:#fff;border-color:rgba(23,32,47,.35)}
+.subj-card .go{display:block;margin-top:14px;font:700 11.5px 'JetBrains Mono';letter-spacing:1.5px;color:var(--ink-soft);
+  text-transform:uppercase;transition:.18s}
+.subj-card:hover .go{color:var(--ink);transform:translateX(5px)}
+.subj-add{border:2.5px dashed rgba(23,32,47,.4);border-radius:12px;background:transparent;min-height:230px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  font:700 15px 'Unbounded';color:var(--ink-soft);transition:.2s;animation:rise .5s both}
+.subj-add span{font-size:36px;line-height:1;transition:transform .2s}
+.subj-add:hover{border-color:var(--ink);background:var(--yellow-soft);color:var(--ink);transform:translateY(-3px)}
+.subj-add:hover span{transform:rotate(90deg)}
+
+/* ── лента «до экзамена» ───────────────── */
+.strip{display:grid;grid-template-columns:auto 1fr;background:var(--card);border:2px solid var(--ink);border-radius:12px;
+  overflow:hidden;margin-bottom:18px;box-shadow:6px 7px 0 rgba(23,32,47,.1);animation:rise .45s both}
+.tear{background:var(--yellow);padding:22px 34px 18px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+  border-right:2px dashed rgba(23,32,47,.45);position:relative}
+.tear::before{content:'';position:absolute;inset:6px;border:1.5px dashed rgba(23,32,47,.3);border-radius:6px;pointer-events:none}
+.big{font:900 clamp(58px,8vw,98px)/0.95 'Unbounded';letter-spacing:-2px}
+.tear .w{font:700 15px 'Unbounded';text-transform:uppercase;letter-spacing:1px;max-width:110px}
+.strip-info{padding:20px 26px;display:flex;flex-direction:column;justify-content:center;gap:6px;align-items:flex-start}
+.strip-info .date{font:600 13px 'JetBrains Mono';letter-spacing:1px;color:var(--ink-soft);text-transform:uppercase}
+.strip-info .hrs{font:700 21px 'Unbounded'}
+.strip-info .hrs b{background:linear-gradient(transparent 58%,var(--yellow) 58%);padding:0 4px}
+.strip-info .plan{font-size:14px;color:var(--ink-soft)}
+.strip-info .urgent{color:var(--red);font-weight:700}
+
+/* ── материал ──────────────────────────── */
+.mat-top{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:14px}
+.pct-big{font:900 clamp(46px,6vw,72px)/1 'Unbounded';letter-spacing:-1px}
+.pct-big span{font-size:.45em;font-weight:700}
+.mat-nums{display:flex;gap:10px;flex-wrap:wrap;margin-left:auto}
+.pill{border:2px solid var(--ink);border-radius:99px;padding:5px 14px;font:600 12.5px 'JetBrains Mono';background:#fff}
+.pill b{font-size:14px}
+.pill.ok{background:#e7f4ec;border-color:var(--green);color:var(--green)}
+.pill.left{background:#fdecec;border-color:var(--red);color:var(--red)}
+.track{height:32px;border:2px solid var(--ink);border-radius:8px;background:#fff;position:relative;margin:8px 0 10px}
+.fill{height:100%;width:0%;border-radius:5px 0 0 5px;transition:width .7s cubic-bezier(.25,1,.35,1);
+  background:repeating-linear-gradient(-55deg,var(--yellow) 0 12px,#f2bd2e 12px 24px);background-size:34px 34px;
+  animation:stripes 1.1s linear infinite}
+@keyframes stripes{to{background-position:34px 0}}
+.plan-flag{position:absolute;top:-9px;bottom:-9px;width:2.5px;background:var(--ink);transition:left .6s;z-index:2}
+.plan-flag i{position:absolute;top:-17px;left:-7px;width:17px;height:17px;background:var(--red);clip-path:polygon(0 0,100% 0,0 100%)}
+.mat-hint{font-size:13px;color:var(--ink-soft)}
+.mat-hint b{color:var(--ink)}
+.stamp{position:absolute;top:14px;right:18px;border:3px solid var(--red);color:var(--red);padding:7px 16px;
+  font:800 14px 'Unbounded';letter-spacing:2px;transform:rotate(7deg) scale(0);border-radius:6px;background:rgba(255,253,246,.85);z-index:3}
+body.alldone .stamp{animation:stampIn .5s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes stampIn{to{transform:rotate(7deg) scale(1)}}
+
+/* ── run rate ──────────────────────────── */
+.dev-big{font:900 clamp(40px,5vw,58px)/1 'Unbounded';margin-bottom:4px}
+.dev-big.plus{color:var(--green)}.dev-big.minus{color:var(--red)}
+.gauge{position:relative;height:14px;border:2px solid var(--ink);border-radius:99px;margin:26px 4px 8px;
+  background:linear-gradient(90deg,#fbdfe0 0 50%,#ddf0e5 50% 100%)}
+.gauge .mid{position:absolute;left:50%;top:-8px;bottom:-8px;width:2.5px;background:var(--ink)}
+.needle{position:absolute;top:50%;left:50%;width:20px;height:20px;border-radius:50%;background:var(--ink);
+  border:3.5px solid var(--card);box-shadow:0 2px 0 rgba(0,0,0,.25);transform:translate(-50%,-50%);
+  transition:left .7s cubic-bezier(.3,1.5,.4,1)}
+.gauge-lbl{display:flex;justify-content:space-between;font:600 10.5px 'JetBrains Mono';letter-spacing:1px;
+  color:var(--ink-soft);text-transform:uppercase;margin-bottom:14px}
+.pace{font-size:14px;border-top:2px dashed rgba(23,32,47,.2);padding-top:12px}
+.pace b{background:linear-gradient(transparent 60%,var(--yellow-soft) 60%)}
+
+/* ── время ────────────────────────────── */
+.hours-big{font:900 clamp(40px,5vw,56px)/1 'Unbounded';margin:2px 0 4px}
+.hours-big em{font:700 15px 'Golos Text';font-style:normal;color:var(--ink-soft)}
+.rows{display:flex;flex-direction:column;gap:9px;margin:16px 0}
+.rows div{display:flex;justify-content:space-between;gap:12px;font-size:14px;border-bottom:1.5px dashed rgba(23,32,47,.18);padding-bottom:7px}
+.rows b{font:600 13.5px 'JetBrains Mono';white-space:nowrap}
+.tbar{height:9px;border:2px solid var(--ink);border-radius:99px;background:#fff;overflow:hidden;margin-top:8px}
+.tbar .tf{height:100%;background:var(--ink);width:0%;transition:width .7s}
+
+/* ── график ────────────────────────────── */
+.chart svg{width:100%;height:auto;display:block}
+.fadearea{animation:afade .9s both}
+@keyframes afade{from{opacity:0}to{opacity:1}}
+.lg{display:flex;gap:20px;margin-top:10px;font:600 11.5px 'JetBrains Mono';color:var(--ink-soft);letter-spacing:.5px;flex-wrap:wrap}
+.lg i{display:inline-block;width:22px;vertical-align:middle;margin-right:6px}
+.lg .l1{border-top:3px solid var(--ink)}
+.lg .l2{border-top:3px dashed rgba(23,32,47,.55)}
+.lg .l3{border-top:3px dashed var(--red);width:14px}
+
+/* ── вопросы ──────────────────────────── */
+.rules{position:relative;padding-left:24px}
+.rules::before{content:'';position:absolute;left:9px;top:0;bottom:0;width:2px;background:rgba(229,72,77,.28)}
+.qbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.tabs{display:flex;border:2px solid var(--ink);border-radius:8px;overflow:hidden;background:#fff}
+.tab{border:none;background:transparent;padding:8px 14px;font:600 13px 'Golos Text';border-right:2px solid var(--ink);transition:background .15s}
+.tab:last-child{border-right:none}
+.tab:hover{background:var(--yellow-soft)}
+.tab.on{background:var(--ink);color:#fff}
+.tab b{font:600 11px 'JetBrains Mono';opacity:.75;margin-left:4px}
+.qbar .grp{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.qcount{font:600 12px 'JetBrains Mono';color:var(--ink-soft);align-self:center}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(47px,1fr));gap:8px;max-height:420px;overflow:auto;padding:6px 4px 12px}
+.qgrid[data-f="todo"] .chip.done{display:none}
+.qgrid[data-f="done"] .chip:not(.done){display:none}
+.chip{height:38px;border:2px solid var(--ink);border-radius:7px;background:#fff;font:600 13px 'JetBrains Mono';
+  color:var(--ink);position:relative;transition:transform .12s,box-shadow .12s,background .2s}
+.chip:hover{transform:translateY(-2px);box-shadow:0 3px 0 rgba(23,32,47,.3)}
+.chip:active{transform:scale(.9)}
+.chip.done{background:var(--yellow);font-weight:700}
+.chip.done::after{content:'✓';position:absolute;top:-7px;right:-5px;width:16px;height:16px;background:var(--ink);
+  color:var(--yellow);font-size:10px;border-radius:50%;display:grid;place-items:center}
+.chip.pop{animation:pop .4s cubic-bezier(.2,1.8,.4,1)}
+@keyframes pop{0%{transform:scale(.5)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
+.hint{margin-top:12px;font-size:13px;color:var(--ink-soft)}
+.hint kbd{font:600 11px 'JetBrains Mono';border:1.5px solid var(--ink);border-bottom-width:3px;border-radius:5px;padding:1px 6px;background:#fff}
+
+/* ── настройка / облако / результат ────── */
+.setup-outer{display:flex;justify-content:center;padding-top:5vh}
+.setup{width:min(640px,100%);animation:rise .5s both}
+.setup .head{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.setup .head .sticker{background:var(--yellow);border:2px solid var(--ink);padding:4px 12px;font:700 11px 'Unbounded';
+  letter-spacing:2px;transform:rotate(-2deg);box-shadow:2px 2px 0 var(--ink)}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.fgrid .full{grid-column:1/-1}
+label{display:block;font:600 10.5px 'JetBrains Mono';letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px}
+.fgrid input[type=text],.fgrid input[type=date],.fgrid input[type=number],.fgrid input[type=email],.fgrid input[type=password]{
+  width:100%;padding:11px 12px;border:2px solid var(--ink);border-radius:8px;background:#fff;font:500 15px 'Golos Text';
+  outline:none;transition:box-shadow .15s}
+.fgrid input:focus{box-shadow:3px 3px 0 var(--yellow)}
+.preview{margin-top:18px;border:2px dashed var(--ink);border-radius:8px;padding:14px 16px;background:var(--yellow-soft);
+  font-size:14.5px;transition:background .3s}
+.preview.err{background:#fdecec;border-color:var(--red);color:var(--red)}
+.preview b{font-family:'JetBrains Mono'}
+.setup .btn.primary{margin-top:18px;width:100%;font-size:16px;padding:13px}
+dialog{border:2px solid var(--ink);border-radius:12px;padding:26px;width:min(600px,92vw);background:var(--card);
+  box-shadow:10px 12px 0 rgba(23,32,47,.2)}
+dialog::backdrop{background:rgba(23,32,47,.45)}
+dialog .zone{margin-top:20px;border-top:2px dashed rgba(229,72,77,.4);padding-top:16px;display:flex;gap:10px;flex-wrap:wrap}
+.auth-status{font:500 12.5px 'JetBrains Mono';min-height:18px;margin:12px 0 4px;color:var(--ink-soft)}
+.auth-status.err{color:var(--red)}
+.auth-status.ok{color:var(--green)}
+.auth-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.auth-user-line{font-size:14.5px;margin-bottom:6px}
+.auth-hint{background:var(--yellow-soft);border:2px dashed var(--ink);border-radius:8px;padding:14px 16px;
+  font-size:13.5px;line-height:1.7}
+.auth-hint code{font:600 12px 'JetBrains Mono';background:#fff;padding:1px 5px;border-radius:4px;border:1px solid rgba(23,32,47,.2)}
+.res-options{display:flex;flex-direction:column;gap:10px;margin:8px 0 4px}
+.res-opt{display:flex;align-items:center;gap:10px;border:2px solid rgba(23,32,47,.2);border-radius:8px;padding:11px 13px;
+  cursor:pointer;transition:.15s;background:#fff;font-weight:600;font-size:14px}
+.res-opt:hover{border-color:rgba(23,32,47,.5)}
+.res-opt:has(input:checked){border-color:var(--ink);background:var(--yellow-soft);box-shadow:3px 3px 0 rgba(23,32,47,.15)}
+.res-opt input[type=radio]{accent-color:var(--ink);width:16px;height:16px;flex:none}
+.res-opt select,.res-opt input[type=number]{margin-left:auto;border:2px solid var(--ink);border-radius:6px;padding:5px 8px;
+  font:600 13px 'JetBrains Mono';background:#fff;outline:none}
+.res-opt input[type=number]{width:90px}
+
+footer{margin-top:34px;text-align:center;font:500 12px 'JetBrains Mono';color:var(--ink-soft);letter-spacing:.5px}
+footer button{background:none;border:none;color:var(--ink-soft);font:inherit;text-decoration:underline;padding:2px 4px}
+footer button:hover{color:var(--ink)}
+footer button.danger-l:hover{color:var(--red)}
+
+#toast{position:fixed;right:18px;bottom:18px;background:var(--ink);color:#fff;font:600 12.5px 'JetBrains Mono';
+  padding:9px 16px;border-radius:8px;box-shadow:4px 4px 0 var(--yellow);opacity:0;transform:translateY(8px);
+  transition:.25s;z-index:400;pointer-events:none}
+#toast.show{opacity:1;transform:none}
+#toast.err{background:var(--red);box-shadow:4px 4px 0 rgba(23,32,47,.4)}
+
+.cf{position:fixed;top:-6vh;z-index:300;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(114vh) rotate(720deg)}}
+
+@media(max-width:960px){
+  .s5,.s7{grid-column:1/-1}
+  .strip{grid-template-columns:1fr}
+  .tear{border-right:none;border-bottom:2px dashed rgba(23,32,47,.45)}
+  .margin-line{display:none}
+}
+@media(max-width:560px){
+  .wrap{padding:18px 14px 60px}
+  .fgrid{grid-template-columns:1fr}
+  .masthead #btnCloud{margin-left:0}
+  .cal-day{min-height:52px}
+  .cal-ev{font-size:9.5px;padding:2px 4px}
+}
+</style>
+</head>
+<body>
+<div class="margin-line"></div>
+<div class="wm">%</div>
+
+<div class="wrap">
+  <header class="masthead">
+    <button class="btn small" id="btnBack" hidden>← Предметы</button>
+    <div class="logo">
+      <div class="mark"><svg viewBox="0 0 24 24"><path d="M4 13l5 5L20 6"/></svg></div>
+      <div><h1>СЕССИЯ</h1><small>трекер подготовки</small></div>
+    </div>
+    <input id="examName" hidden placeholder="Название предмета…" maxlength="60">
+    <button class="btn small" id="btnCloud" title="Облачная синхронизация">
+      <span class="cloud-dot" id="cloudDot"></span><span class="lbl" id="cloudLbl">локально</span>
+    </button>
+    <button class="btn small" id="btnEdit" hidden>⚙ Настройка</button>
+  </header>
+
+  <!-- ЭКРАН ВЫБОРА ПРЕДМЕТА -->
+  <section id="subjectsView" hidden>
+    <div class="subj-head">
+      <h2>Мои <b>предметы</b></h2>
+      <span class="count" id="subjCount"></span>
+      <button class="btn primary" id="btnAddTop">＋ Новый предмет</button>
+    </div>
+
+    <aside class="card cal-card">
+      <div class="cal-head">
+        <button type="button" class="cal-nav" id="calPrev" title="Предыдущий месяц">‹</button>
+        <div class="cal-title" id="calTitle"></div>
+        <button type="button" class="cal-todaybtn" id="calToday">сегодня</button>
+        <button type="button" class="cal-nav" id="calNext" title="Следующий месяц">›</button>
+      </div>
+      <div class="cal-sub" id="calSub"></div>
+      <div class="cal-dow">
+        <span>пн</span><span>вт</span><span>ср</span><span>чт</span><span>пт</span>
+        <span class="we">сб</span><span class="we">вс</span>
+      </div>
+      <div class="cal-cells" id="calCells"></div>
+      <div class="up-title">Ближайшие экзамены</div>
+      <div class="up-list" id="upList"></div>
+    </aside>
+
+    <div class="subj-grid" id="subjGrid"></div>
+  </section>
+
+  <!-- ЭКРАН СОЗДАНИЯ ПРЕДМЕТА -->
+  <section id="setupView" class="setup-outer" hidden>
+    <form class="card setup" id="setupForm">
+      <div class="head"><span class="sticker">НОВЫЙ ПЛАН</span><span style="font:700 17px 'Unbounded'" id="setupTitle">Подготовка к экзамену</span></div>
+      <div class="fgrid">
+        <div class="full"><label>Название предмета</label><input type="text" id="fName" placeholder="например, Теория вероятностей" maxlength="60"></div>
+        <div><label>Дата экзамена</label><input type="date" id="fExam" required></div>
+        <div><label>Дата старта</label><input type="date" id="fStart" required></div>
+        <div class="full"><label>Сколько вопросов в билетах</label><input type="number" id="fTotal" min="1" max="2000" value="40" required></div>
+      </div>
+      <div class="preview" id="fPreview"></div>
+      <button class="btn primary" type="submit">Создать и рассчитать план →</button>
+    </form>
+  </section>
+
+  <!-- ДАШБОРД -->
+  <main id="dash" hidden>
+    <section class="strip">
+      <div class="tear"><span class="big" id="dNum">—</span><span class="w" id="dWord">дней до экзамена</span></div>
+      <div class="strip-info">
+        <div class="date" id="examDateStr"></div>
+        <div class="hrs" id="hrsLine"></div>
+        <div class="plan" id="planLine"></div>
+        <button type="button" class="btn small" id="btnResult">🏁 Экзамен завершен</button>
+      </div>
+    </section>
+
+    <div class="grid">
+      <article class="card s7">
+        <div class="stamp">ВСЁ ВЫУЧЕНО</div>
+        <div class="ct">Материал<span class="n">01</span></div>
+        <div class="mat-top">
+          <div class="pct-big"><span id="matPct">0</span><span>%</span></div>
+          <div class="mat-nums">
+            <span class="pill ok"><b id="doneCnt">0</b> выучено</span>
+            <span class="pill left"><b id="leftCnt">0</b> осталось · <span id="leftPct">0%</span></span>
+          </div>
+        </div>
+        <div class="track"><div class="fill" id="fill"></div><div class="plan-flag" id="planFlag"><i></i></div></div>
+        <div class="mat-hint" id="matHint"></div>
+      </article>
+
+      <article class="card s5">
+        <div class="ct">Run rate<span class="n">02</span></div>
+        <div class="dev-big" id="devVal">0%</div>
+        <div class="note" id="devNote"></div>
+        <div class="gauge"><div class="mid"></div><div class="needle" id="needle"></div></div>
+        <div class="gauge-lbl"><span>← позади</span><span>по плану</span><span>впереди →</span></div>
+        <div class="pace" id="paceNote"></div>
+      </article>
+
+      <article class="card s5">
+        <div class="ct">Время<span class="n">03</span></div>
+        <div class="note">осталось продуктивных часов (3 ч/день)</div>
+        <div class="hours-big"><span id="hoursBig">0</span> <em>часов</em></div>
+        <div class="rows">
+          <div><span>Осталось дней</span><b id="tDaysLeft">—</b></div>
+          <div><span>Минут на оставшийся вопрос</span><b id="minPerQ">—</b></div>
+          <div><span>По плану вопросов в день</span><b id="perDayVal">—</b></div>
+          <div><span>Нужно в день, чтобы успеть</span><b id="reqNow">—</b></div>
+        </div>
+        <div class="note" id="elapsedTxt"></div>
+        <div class="tbar"><div class="tf" id="tFill"></div></div>
+      </article>
+
+      <article class="card s7 chart">
+        <div class="ct">План × факт<span class="n">04</span></div>
+        <div id="chartBox"></div>
+        <div class="lg"><span><i class="l1"></i>выучено</span><span><i class="l2"></i>план</span><span><i class="l3"></i>сегодня</span></div>
+      </article>
+
+      <article class="card s12 rules">
+        <div class="ct">Вопросы<span class="n">05</span></div>
+        <div class="qbar">
+          <div class="tabs">
+            <button type="button" class="tab on" data-f="all">Все <b id="cAll">0</b></button>
+            <button type="button" class="tab" data-f="todo">Осталось <b id="cTodo">0</b></button>
+            <button type="button" class="tab" data-f="done">Изучено <b id="cDone">0</b></button>
+          </div>
+          <span class="qcount" id="visCount"></span>
+          <div class="grp">
+            <button type="button" class="btn primary small" id="btnNext">Отметить следующий</button>
+            <button type="button" class="btn small" id="btnUndo">↩ Отменить</button>
+            <button type="button" class="btn danger small" id="btnClear">Сбросить отметки</button>
+          </div>
+        </div>
+        <div class="qgrid" id="qgrid" data-f="all"></div>
+        <div class="hint">Кликай по номеру, когда изучил вопрос. Быстрая отметка — клавиша <kbd>N</kbd>.</div>
+      </article>
+    </div>
+  </main>
+
+  <footer>
+    3 продуктивных часа в день · данные хранятся в браузере, при входе в аккаунт — синхронизируются с облаком ·
+    <button id="btnExport" title="Скачать резервную копию всех предметов">экспорт</button> ·
+    <button id="btnImport" title="Загрузить резервную копию">импорт</button> ·
+    <button id="btnWipe" class="danger-l">удалить все данные</button>
+  </footer>
+  <input type="file" id="fileImport" accept=".json,application/json" hidden>
+</div>
+
+<div id="toast">✓ сохранено</div>
+
+<dialog id="dlg">
+  <form id="dlgForm">
+    <div class="ct">Настройка предмета</div>
+    <div class="fgrid">
+      <div class="full"><label>Название предмета</label><input type="text" id="eName" maxlength="60"></div>
+      <div><label>Дата экзамена</label><input type="date" id="eExam" required></div>
+      <div><label>Дата старта</label><input type="date" id="eStart" required></div>
+      <div class="full"><label>Количество вопросов</label><input type="number" id="eTotal" min="1" max="2000" required></div>
+    </div>
+    <div class="zone">
+      <button type="button" class="btn danger small" id="btnMarksReset">Сбросить отметки</button>
+      <button type="button" class="btn danger small" id="btnDeleteSubj">Удалить предмет</button>
+      <span style="flex:1"></span>
+      <button type="button" class="btn small" id="btnCancel">Отмена</button>
+      <button type="submit" class="btn primary small">Сохранить</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ОКНО РЕЗУЛЬТАТА ЭКЗАМЕНА -->
+<dialog id="resultDlg">
+  <div class="ct">Результат экзамена</div>
+  <div class="note" id="resSubjectName" style="margin-bottom:12px"></div>
+  <div class="res-options">
+    <label class="res-opt"><input type="radio" name="resType" value="pending"><span>⏳ Ожидание результатов</span></label>
+    <label class="res-opt"><input type="radio" name="resType" value="grade"><span>🎓 Оценка</span>
+      <select id="resGrade">
+        <option value="5">5 — отлично</option>
+        <option value="4">4 — хорошо</option>
+        <option value="3">3 — удовлетворительно</option>
+        <option value="2">2 — неудовлетворительно</option>
+      </select>
+    </label>
+    <label class="res-opt"><input type="radio" name="resType" value="score"><span>🎯 Баллы</span>
+      <input type="number" id="resScore" min="0" max="100" placeholder="0–100">
+    </label>
+  </div>
+  <div class="auth-status" id="resStatus"></div>
+  <div class="auth-btns">
+    <button type="button" class="btn primary small" id="resSave">Сохранить</button>
+    <button type="button" class="btn danger small" id="resClear" hidden>Снять завершение</button>
+    <span style="flex:1"></span>
+    <button type="button" class="btn small" data-close3>Закрыть</button>
+  </div>
+</dialog>
+
+<!-- ОКНО ОБЛАКА -->
+<dialog id="authDlg">
+  <div class="ct">Облачная синхронизация</div>
+  <div id="authNotConfigured" class="auth-hint">
+    <b>Синхронизация пока не настроена</b> — приложение работает локально.<br><br>
+    1. Создайте бесплатный проект на <b>supabase.com</b>.<br>
+    2. В SQL Editor выполните скрипт создания таблицы <code>app_state</code>.<br>
+    3. Скопируйте URL проекта и <code>anon key</code> (Settings → API) в константы в начале кода.<br>
+    4. Чтобы входить сразу после регистрации, снимите <code>Confirm email</code> (Authentication → Providers → Email).
+  </div>
+  <form id="authForm" hidden>
+    <div class="fgrid">
+      <div class="full"><label>Email</label><input type="email" id="aEmail" required placeholder="you@example.com" autocomplete="email"></div>
+      <div class="full"><label>Пароль</label><input type="password" id="aPass" required minlength="6" placeholder="минимум 6 символов" autocomplete="current-password"></div>
+    </div>
+    <div class="auth-status" id="authStatus"></div>
+    <div class="auth-btns">
+      <button type="submit" class="btn primary small">Войти</button>
+      <button type="button" class="btn small" id="btnSignUp">Создать аккаунт</button>
+      <span style="flex:1"></span>
+      <button type="button" class="btn small" data-close>Закрыть</button>
+    </div>
+  </form>
+  <div id="authUser" hidden>
+    <div class="auth-user-line">Вы вошли как <b id="authEmail"></b></div>
+    <div class="note" id="lastSyncLine">последняя синхронизация: —</div>
+    <div class="auth-btns" style="margin-top:14px">
+      <button type="button" class="btn primary small" id="btnSyncNow">⟳ Синхронизировать сейчас</button>
+      <button type="button" class="btn danger small" id="btnSignOut">Выйти</button>
+      <span style="flex:1"></span>
+      <button type="button" class="btn small" data-close>Закрыть</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ═══ ВАШИ КЛЮЧИ SUPABASE ═══ */
+const SUPABASE_URL = 'https://tkzapucmoupiilwjfwrz.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRremFwdWNtb3VwaWlsd2pmd3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMDc3MDQsImV4cCI6MjEwMTU4MzcwNH0.ZauzoIi5Qc2_vEqnN-evkBYXrO40EfeuASUK0XxC0F8';
+
+/* ═══════════ база и утилиты ═══════════ */
+const $ = s => document.querySelector(s);
+const KEY = 'sessiya-db-v2', KEY_OLD = 'sessiya-state-v1';
+let db = loadDB(), filter = 'all', celebrated = false, toastTimer = null;
+let calYear = null, calMonth = null;
+
+const pD = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const today0 = () => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); };
+const dBet = (a,b) => Math.round((b - a) / 864e5);
+const iso = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const fmt = s => pD(s).toLocaleDateString('ru-RU',{day:'numeric',month:'long'});
+const fmtY = s => pD(s).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'});
+const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const esc = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function plural(n,o,f,m){ n=Math.abs(n)%100; const n1=n%10;
+  if(n>10&&n<20) return m; if(n1>1&&n1<5) return f; if(n1===1) return o; return m; }
+const PALETTE = ['#2f6fed','#1e9e5a','#e5484d','#e8890c','#0e93a1','#7048b6'];
+function subColor(sub){ let h=0; for(const ch of sub.id) h=(h*31+ch.charCodeAt(0))>>>0; return PALETTE[h%PALETTE.length]; }
+function resText(r){
+  if(!r) return '';
+  if(r.type==='pending') return 'ожидание результатов';
+  if(r.type==='grade') return 'оценка '+r.value;
+  return r.value+' / 100';
+}
+
+/* ═══════════ сохранение (localStorage + облако) ═══════════ */
+function loadDB(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw){ const d = JSON.parse(raw); if(d && Array.isArray(d.subjects)){ d.meta=d.meta||{}; return d; } }
+    const old = localStorage.getItem(KEY_OLD);
+    if(old){
+      const s = JSON.parse(old);
+      if(s && s.exam){
+        const d = { version:2, view:'dash', activeId:'legacy', meta:{},
+          subjects:[{ id:'legacy', name:s.name||'Экзамен', start:s.start, exam:s.exam,
+                      total:+s.total||1, done:s.done||{}, result:null, createdAt:Date.now() }] };
+        localStorage.setItem(KEY, JSON.stringify(d));
+        localStorage.removeItem(KEY_OLD);
+        return d;
+      }
+    }
+  }catch(e){}
+  return { version:2, view:'subjects', activeId:null, subjects:[], meta:{} };
+}
+function saveDB(silent){
+  db.meta = db.meta || {};
+  db.meta.updated = Date.now();
+  try{
+    localStorage.setItem(KEY, JSON.stringify(db));
+    if(!silent) flashToast('✓ сохранено');
+  }catch(e){ flashToast('⚠ не удалось сохранить', true); }
+  pushCloud();
+}
+function flashToast(msg, err){
+  const t = $('#toast'); t.textContent = msg;
+  t.classList.toggle('err', !!err); t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 900);
+}
+window.addEventListener('beforeunload', ()=>saveDB(true));
+
+const active = () => db.subjects.find(s => s.id === db.activeId) || null;
+
+/* ═══════════ облако (Supabase) ═══════════ */
+let sb = null, cloudUser = null, lastSyncAt = null, pushTimer = null;
+function initCloud(){
+  if(SUPABASE_URL && SUPABASE_ANON_KEY && typeof supabase !== 'undefined'){
+    try{ sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }catch(e){ sb = null; }
+  }
+  if(!sb){ setCloudUI('off','локально'); return; }
+  sb.auth.onAuthStateChange((event, session)=>{
+    cloudUser = session?.user || null;
+    if(event === 'SIGNED_OUT'){
+      setCloudUI('off','локально'); refreshAuthDialog();
+    } else if(event === 'INITIAL_SESSION' || event === 'SIGNED_IN'){
+      setCloudUI('ok', shortEmail(cloudUser?.email)); refreshAuthDialog(); pullCloud();
+    }
+  });
+}
+const shortEmail = e => e ? (e.length>18 ? e.slice(0,16)+'…' : e) : '';
+function setCloudUI(state, label){
+  $('#cloudDot').className = 'cloud-dot' + (state && state!=='off' ? ' '+state : '');
+  $('#cloudLbl').textContent = label;
+  $('#btnCloud').title = state==='off'
+    ? 'Облако не подключено — данные хранятся только в этом браузере'
+    : 'Облачная синхронизация';
+}
+async function pushCloudNow(){
+  if(!sb || !cloudUser) return;
+  setCloudUI('busy', shortEmail(cloudUser.email));
+  const { error } = await sb.from('app_state').upsert({
+    user_id: cloudUser.id, data: db, updated_at: new Date().toISOString()
+  });
+  if(error){ setCloudUI('err','нет связи'); return; }
+  lastSyncAt = Date.now();
+  setCloudUI('ok', shortEmail(cloudUser.email));
+  updateLastSyncLine();
+}
+function pushCloud(){
+  if(!sb || !cloudUser) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(pushCloudNow, 700);
+}
+async function pullCloud(){
+  if(!sb || !cloudUser) return;
+  setCloudUI('busy', shortEmail(cloudUser.email));
+  const { data: row, error } = await sb.from('app_state')
+    .select('data').eq('user_id', cloudUser.id).maybeSingle();
+  if(error){ setCloudUI('err','нет связи'); return; }
+  const localUpdated = db.meta?.updated || 0;
+  if(row && row.data && Array.isArray(row.data.subjects)){
+    const cloudUpdated = row.data.meta?.updated || 0;
+    if(cloudUpdated >= localUpdated){
+      db = row.data; db.meta = db.meta || {};
+      try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){}
+      route();
+    } else {
+      await pushCloudNow(); return;
+    }
+  } else if(db.subjects.length){
+    await pushCloudNow(); return;
+  }
+  lastSyncAt = Date.now();
+  setCloudUI('ok', shortEmail(cloudUser.email));
+  updateLastSyncLine();
+}
+function updateLastSyncLine(){
+  $('#lastSyncLine').textContent = 'последняя синхронизация: '
+    + (lastSyncAt ? new Date(lastSyncAt).toLocaleTimeString('ru-RU') : '—');
+}
+
+/* ── окно облака ── */
+$('#btnCloud').addEventListener('click', ()=>{ refreshAuthDialog(); $('#authDlg').showModal(); });
+function refreshAuthDialog(){
+  const configured = !!sb;
+  $('#authNotConfigured').hidden = configured;
+  $('#authForm').hidden = !configured || !!cloudUser;
+  $('#authUser').hidden = !configured || !cloudUser;
+  if(cloudUser){ $('#authEmail').textContent = cloudUser.email; updateLastSyncLine(); }
+  const st=$('#authStatus'); st.textContent=''; st.className='auth-status';
+}
+function authErrorText(msg){
+  const m = {
+    'Invalid login credentials':'Неверный email или пароль',
+    'User already registered':'Такой email уже зарегистрирован',
+    'Email not confirmed':'Email не подтверждён — проверьте почту',
+    'Password should be at least':'Пароль должен быть не короче 6 символов'
+  };
+  for(const k in m) if(msg.includes(k)) return m[k];
+  return msg;
+}
+$('#authForm').addEventListener('submit', e=>{ e.preventDefault(); doSignIn(); });
+$('#btnSignUp').addEventListener('click', doSignUp);
+async function doSignIn(){
+  const email=$('#aEmail').value.trim(), pass=$('#aPass').value, st=$('#authStatus');
+  st.className='auth-status'; st.textContent='входим…';
+  const { error } = await sb.auth.signInWithPassword({email, password:pass});
+  if(error){ st.className='auth-status err'; st.textContent=authErrorText(error.message); return; }
+  st.className='auth-status ok'; st.textContent='готово!';
+  flashToast('☁ вошли как '+email);
+  setTimeout(()=>$('#authDlg').close(), 450);
+}
+async function doSignUp(){
+  const email=$('#aEmail').value.trim(), pass=$('#aPass').value, st=$('#authStatus');
+  st.className='auth-status'; st.textContent='создаём аккаунт…';
+  const { data, error } = await sb.auth.signUp({email, password:pass});
+  if(error){ st.className='auth-status err'; st.textContent=authErrorText(error.message); return; }
+  if(data.session){
+    st.className='auth-status ok'; st.textContent='аккаунт создан!';
+    flashToast('☁ аккаунт создан');
+    setTimeout(()=>$('#authDlg').close(), 450);
+  } else {
+    st.className='auth-status ok';
+    st.textContent='Аккаунт создан. Подтвердите email по письму от Supabase, затем войдите.';
+  }
+}
+$('#btnSignOut').addEventListener('click', async ()=>{
+  await sb.auth.signOut();
+  flashToast('вы вышли из облака — данные остались на устройстве');
+  $('#authDlg').close();
+});
+$('#btnSyncNow').addEventListener('click', async ()=>{
+  await pullCloud(); await pushCloudNow();
+  flashToast('☁ синхронизировано');
+});
+document.querySelectorAll('#authDlg [data-close]').forEach(b=>b.addEventListener('click',()=>$('#authDlg').close()));
+
+/* ═══════════ результат экзамена ═══════════ */
+let resSubId = null;
+function openResultDlg(id){
+  const sub = db.subjects.find(s=>s.id===id); if(!sub) return;
+  resSubId = id;
+  $('#resSubjectName').textContent = '«'+sub.name+'» · экзамен '+fmtY(sub.exam);
+  const r = sub.result;
+  const type = r ? r.type : 'pending';
+  document.querySelectorAll('input[name=resType]').forEach(x=>x.checked=(x.value===type));
+  $('#resGrade').value = (r && r.type==='grade') ? String(r.value) : '5';
+  $('#resScore').value = (r && r.type==='score') ? r.value : '';
+  $('#resClear').hidden = !r;
+  const st=$('#resStatus'); st.textContent=''; st.className='auth-status';
+  $('#resultDlg').showModal();
+}
+$('#btnResult').addEventListener('click', ()=>{ const sub=active(); if(sub) openResultDlg(sub.id); });
+$('#resSave').addEventListener('click', ()=>{
+  const sub = db.subjects.find(s=>s.id===resSubId); if(!sub) return;
+  const type = document.querySelector('input[name=resType]:checked').value;
+  const st = $('#resStatus');
+  if(type==='score'){
+    const raw=$('#resScore').value, v=Math.round(+raw);
+    if(raw==='' || isNaN(v) || v<0 || v>100){
+      st.className='auth-status err'; st.textContent='введите баллы от 0 до 100'; return;
+    }
+    sub.result={type:'score',value:v,at:Date.now()};
+  } else if(type==='grade'){
+    sub.result={type:'grade',value:+$('#resGrade').value,at:Date.now()};
+  } else {
+    sub.result={type:'pending',value:null,at:Date.now()};
+  }
+  saveDB(); $('#resultDlg').close(); refreshViews();
+  flashToast('🏁 результат сохранён');
+});
+$('#resClear').addEventListener('click', ()=>{
+  const sub = db.subjects.find(s=>s.id===resSubId); if(!sub) return;
+  if(!confirm('Снять отметку о завершении экзамена по «'+sub.name+'»?')) return;
+  sub.result = null;
+  saveDB(); $('#resultDlg').close(); refreshViews();
+});
+document.querySelectorAll('#resultDlg [data-close3]').forEach(b=>b.addEventListener('click',()=>$('#resultDlg').close()));
+$('#resultDlg').addEventListener('click', e=>{ if(e.target===$('#resultDlg')) $('#resultDlg').close(); });
+
+function refreshViews(){
+  if(!$('#dash').hidden) renderStats(false);
+  if(!$('#subjectsView').hidden){ renderSubjects(); renderCalendar(); }
+}
+
+/* ═══════════ расчёт ═══════════ */
+function calc(sub){
+  const start = pD(sub.start), exam = pD(sub.exam), t = today0();
+  const studyDays = Math.max(1, dBet(start, exam));
+  const elapsed = Math.min(studyDays, Math.max(0, dBet(start, t)));
+  const daysLeft = Math.max(0, dBet(t, exam));
+  const total = Math.max(1, Math.round(+sub.total||1));
+  const perDay = Math.ceil(total / studyDays);
+  const done = Object.keys(sub.done||{}).length;
+  const remaining = total - done;
+  const expected = Math.min(total, perDay * elapsed);
+  const dev = done - expected;
+  const devPct = expected > 0 ? Math.round(dev / expected * 100) : (done > 0 ? 100 : 0);
+  const hoursLeft = daysLeft * 3;
+  const timePct = elapsed / studyDays * 100;
+  const matPct = done / total * 100;
+  const minPerQ = (hoursLeft > 0 && remaining > 0) ? Math.max(1, Math.round(hoursLeft*60/remaining)) : null;
+  const reqNow = daysLeft > 0 ? Math.ceil(remaining / daysLeft) : remaining;
+  let pace = null;
+  if (elapsed > 0 && done > 0){
+    const rate = done / elapsed, need = remaining / rate;
+    const proj = new Date(t.getTime() + Math.ceil(need) * 864e5);
+    pace = { rate, needDays: Math.ceil(need), proj, diff: dBet(proj, exam) };
+  }
+  return { sub, start, exam, t, studyDays, elapsed, daysLeft, total, perDay, done, remaining,
+           expected, dev, devPct, hoursLeft, timePct, matPct, minPerQ, reqNow, pace };
+}
+
+/* ═══════════ навигация ═══════════ */
+function route(){
+  if(!db.subjects.length){ showSetup('Подготовка к экзамену'); return; }
+  if(db.view === 'subjects'){ showSubjects(); return; }
+  if(!db.activeId || !db.subjects.find(s=>s.id===db.activeId)) db.activeId = db.subjects[0].id;
+  showDash();
+}
+function showSubjects(){
+  db.view = 'subjects';
+  $('#dash').hidden = true; $('#setupView').hidden = true; $('#subjectsView').hidden = false;
+  $('#btnBack').hidden = true; $('#examName').hidden = true; $('#btnEdit').hidden = true;
+  document.body.classList.remove('alldone');
+  renderSubjects(); renderCalendar();
+}
+function showSetup(title){
+  $('#dash').hidden = true; $('#subjectsView').hidden = true; $('#setupView').hidden = false;
+  $('#btnBack').hidden = true; $('#examName').hidden = true; $('#btnEdit').hidden = true;
+  $('#setupTitle').textContent = title;
+  $('#fName').value=''; $('#fTotal').value=40;
+  $('#fStart').value = iso(today0());
+  $('#fExam').value = iso(new Date(today0().getTime() + 30*864e5));
+  livePreview();
+  document.body.classList.remove('alldone');
+}
+function showDash(){
+  const sub = active(); if(!sub){ route(); return; }
+  $('#subjectsView').hidden = true; $('#setupView').hidden = true; $('#dash').hidden = false;
+  $('#btnBack').hidden = false; $('#examName').hidden = false; $('#btnEdit').hidden = false;
+  $('#examName').value = sub.name;
+  celebrated = Object.keys(sub.done).length >= sub.total;
+  renderStats(true); renderChips();
+}
+function openSubject(id){ db.activeId = id; db.view = 'dash'; saveDB(true); showDash(); }
+$('#btnBack').addEventListener('click', ()=>{ saveDB(true); showSubjects(); });
+$('#btnAddTop').addEventListener('click', ()=>showSetup('Новый предмет'));
+
+/* ═══════════ календарь ═══════════ */
+$('#calPrev').addEventListener('click', ()=>{ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); });
+$('#calNext').addEventListener('click', ()=>{ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); });
+$('#calToday').addEventListener('click', ()=>{ const t=today0(); calYear=t.getFullYear(); calMonth=t.getMonth(); renderCalendar(); });
+
+function renderCalendar(){
+  if(calYear===null){ const t=today0(); calYear=t.getFullYear(); calMonth=t.getMonth(); }
+  const first=new Date(calYear,calMonth,1);
+  const dim=new Date(calYear,calMonth+1,0).getDate();
+  const startDow=(first.getDay()+6)%7;
+  const t=today0();
+  const mName=first.toLocaleDateString('ru-RU',{month:'long'});
+  $('#calTitle').textContent=mName[0].toUpperCase()+mName.slice(1)+' '+calYear;
+  const byDay={};
+  let monthCount=0;
+  db.subjects.forEach(s=>{
+    const d=pD(s.exam);
+    if(d.getFullYear()===calYear && d.getMonth()===calMonth){
+      (byDay[d.getDate()]=byDay[d.getDate()]||[]).push(s); monthCount++;
+    }
+  });
+  $('#calSub').textContent = monthCount
+    ? monthCount+' '+plural(monthCount,'экзамен','экзамена','экзаменов')+' в этом месяце'
+    : 'в этом месяце экзаменов нет';
+  const cells=$('#calCells'); cells.innerHTML='';
+  for(let i=0;i<startDow;i++){ const b=document.createElement('div'); b.className='cal-blank'; cells.appendChild(b); }
+  for(let day=1;day<=dim;day++){
+    const cell=document.createElement('div'); cell.className='cal-day';
+    const dow=(startDow+day-1)%7;
+    if(dow>=5) cell.classList.add('we');
+    if(calYear===t.getFullYear()&&calMonth===t.getMonth()&&day===t.getDate()) cell.classList.add('today');
+    const num=document.createElement('span'); num.className='cal-num'; num.textContent=day;
+    cell.appendChild(num);
+    const list=byDay[day]||[];
+    list.slice(0,3).forEach(s=>{
+      const chip=document.createElement('button'); chip.type='button'; chip.className='cal-ev';
+      chip.style.background=subColor(s); chip.textContent=s.name;
+      const c=calc(s);
+      if(c.done>=c.total) chip.classList.add('done-ev');
+      chip.title='Экзамен: '+s.name
+        +(s.result? ' · '+resText(s.result) : (c.done>=c.total?' · выучено 100%':' · выучено '+Math.round(c.matPct)+'%'));
+      chip.addEventListener('click',()=>openSubject(s.id));
+      cell.appendChild(chip);
+    });
+    if(list.length>3){ const m=document.createElement('span'); m.className='cal-more';
+      m.textContent='+'+(list.length-3)+' ещё'; cell.appendChild(m); }
+    cells.appendChild(cell);
+  }
+  renderUpcoming();
+}
+function renderUpcoming(){
+  const t=today0();
+  const up=db.subjects.filter(s=>pD(s.exam)>=t && !s.result).sort((a,b)=>pD(a.exam)-pD(b.exam)).slice(0,4);
+  const box=$('#upList');
+  if(!up.length){ box.innerHTML='<div class="note" style="padding:4px 2px">предстоящих экзаменов нет</div>'; return; }
+  box.innerHTML='';
+  up.forEach(s=>{
+    const d=dBet(t,pD(s.exam));
+    const b=document.createElement('button'); b.type='button'; b.className='up-item';
+    b.innerHTML='<span class="up-dot" style="background:'+subColor(s)+'"></span>'
+      +'<span class="up-name">'+esc(s.name)+'</span>'
+      +'<span class="up-when">'+(d===0?'сегодня!':d+' '+plural(d,'день','дня','дней'))+'</span>';
+    b.addEventListener('click',()=>openSubject(s.id));
+    box.appendChild(b);
+  });
+}
+
+/* ═══════════ экран предметов ═══════════ */
+function renderSubjects(){
+  const grid = $('#subjGrid'); grid.innerHTML = '';
+  const sorted = [...db.subjects].sort((a,b)=>pD(a.exam)-pD(b.exam));
+  sorted.forEach((sub,i)=>{
+    const c = calc(sub);
+    const card = document.createElement('article');
+    card.className = 'subj-card'; card.style.animationDelay = (i*0.06)+'s';
+    const devCls = c.devPct>0 ? 'up' : c.devPct<0 ? 'down' : 'flat';
+    const devTxt = c.devPct>0 ? '▲ +'+c.devPct+'%' : c.devPct<0 ? '▼ '+c.devPct+'%' : '● по плану';
+    const daysTxt = c.daysLeft === 0
+      ? (sub.result ? 'экзамен завершён'
+         : (c.remaining === 0 ? 'экзамен сегодня · всё готово' : '<span class="warn">⚠ срок истёк, осталось '+c.remaining+'</span>'))
+      : c.daysLeft+' '+plural(c.daysLeft,'день','дня','дней')+' до экзамена';
+    card.innerHTML =
+      '<button type="button" class="subj-flag" title="Результат экзамена">🏁</button>'
+      +'<button type="button" class="subj-del" title="Удалить предмет">×</button>'
+      +'<h3><span class="subj-dot" style="background:'+subColor(sub)+'"></span>'+esc(sub.name)+'</h3>'
+      +'<div class="subj-pct">'+Math.round(c.matPct)+'<span>%</span></div>'
+      +'<div class="subj-track"><div style="width:'+c.matPct.toFixed(1)+'%"></div></div>'
+      +'<div class="subj-meta">'
+        +'<span>📅 '+fmtY(sub.exam)+'</span>'
+        +'<span>'+daysTxt+'</span>'
+        +'<span>'+c.done+' из '+c.total+' вопр. · '+c.perDay+'/день по плану</span>'
+      +'</div>'
+      +'<span class="subj-badge '+devCls+'">'+devTxt+'</span>'
+      +(sub.result
+        ? ' <button type="button" class="subj-badge res'+(sub.result.type==='pending'?' pending':'')+'" data-resbtn title="Изменить результат">🏁 '+resText(sub.result)+'</button>'
+        : '')
+      +'<span class="go">Открыть →</span>';
+    card.addEventListener('click', e=>{
+      if(e.target.closest('.subj-del')||e.target.closest('.subj-flag')||e.target.closest('[data-resbtn]')) return;
+      openSubject(sub.id);
+    });
+    card.querySelector('.subj-del').addEventListener('click', e=>{ e.stopPropagation(); deleteSubject(sub.id); });
+    card.querySelector('.subj-flag').addEventListener('click', e=>{ e.stopPropagation(); openResultDlg(sub.id); });
+    const rb=card.querySelector('[data-resbtn]');
+    if(rb) rb.addEventListener('click', e=>{ e.stopPropagation(); openResultDlg(sub.id); });
+    grid.appendChild(card);
+  });
+  const add = document.createElement('button');
+  add.type='button'; add.className='subj-add';
+  add.style.animationDelay = (sorted.length*0.06)+'s';
+  add.innerHTML = '<span>＋</span>Новый предмет';
+  add.addEventListener('click', ()=>showSetup('Новый предмет'));
+  grid.appendChild(add);
+  const n = db.subjects.length;
+  $('#subjCount').textContent = n ? n+' '+plural(n,'предмет','предмета','предметов') : '';
+}
+function deleteSubject(id){
+  const sub = db.subjects.find(s=>s.id===id); if(!sub) return;
+  if(!confirm('Удалить предмет «'+sub.name+'» и все его отметки?')) return;
+  db.subjects = db.subjects.filter(s=>s.id!==id);
+  if(db.activeId===id){ db.activeId = null; db.view = 'subjects'; }
+  saveDB();
+  if(!db.subjects.length) showSetup('Подготовка к экзамену'); else showSubjects();
+}
+
+/* ═══════════ создание предмета ═══════════ */
+function livePreview(){
+  const s=$('#fStart').value, x=$('#fExam').value, n=+$('#fTotal').value, box=$('#fPreview');
+  if(!s||!x||!n){ box.className='preview'; box.textContent='Заполни даты и число вопросов — увидишь план.'; return; }
+  const days = dBet(pD(s), pD(x));
+  if(days < 1){ box.className='preview err'; box.textContent='⚠ Дата экзамена должна быть позже даты старта.'; return; }
+  if(n < 1 || n > 2000){ box.className='preview err'; box.textContent='⚠ Количество вопросов: от 1 до 2000.'; return; }
+  const perDay = Math.ceil(n/days), minDay = Math.round(n/(days*3)*60);
+  box.className='preview';
+  box.innerHTML = '📌 '+n+' '+plural(n,'вопрос','вопроса','вопросов')+' за <b>'+days+' '+plural(days,'день','дня','дней')
+    +'</b> → <b>'+perDay+'</b> '+plural(perDay,'вопрос','вопроса','вопросов')+' в день · ≈ <b>'+minDay+'</b> мин в день';
+}
+['#fStart','#fExam','#fTotal'].forEach(s=>$(s).addEventListener('input', livePreview));
+$('#setupForm').addEventListener('submit', e=>{
+  e.preventDefault(); livePreview();
+  if($('#fPreview').classList.contains('err')) return;
+  const sub = { id:genId(), name:$('#fName').value.trim()||'Экзамен', start:$('#fStart').value,
+                exam:$('#fExam').value, total:Math.min(2000,Math.max(1,Math.round(+$('#fTotal').value))),
+                done:{}, result:null, createdAt:Date.now() };
+  db.subjects.push(sub); db.activeId = sub.id; db.view = 'dash';
+  saveDB(); showDash();
+});
+
+/* ═══════════ дашборд: статистика ═══════════ */
+function renderStats(animateChart){
+  const sub = active(); if(!sub) return;
+  const c = calc(sub);
+  $('#dNum').textContent = c.daysLeft;
+  $('#dWord').textContent = c.daysLeft === 0 ? 'экзамен сегодня!' : plural(c.daysLeft,'день до экзамена','дня до экзамена','дней до экзамена');
+  $('#examDateStr').textContent = '📅 ' + fmtY(sub.exam);
+  $('#hrsLine').innerHTML = c.daysLeft === 0 ? '<b>последний рывок</b> 📚'
+    : '<b>'+c.hoursLeft+'</b> '+plural(c.hoursLeft,'продуктивный час','продуктивных часа','продуктивных часов')+' осталось';
+  $('#planLine').innerHTML = c.remaining === 0
+    ? '🎉 все вопросы закрыты — повторяй по конспектам'
+    : 'по плану <b>'+c.perDay+'</b> '+plural(c.perDay,'вопрос','вопроса','вопросов')+' в день'
+      + (c.reqNow > c.perDay ? ' · чтобы успеть, нужно <b class="urgent">'+c.reqNow+'/день</b>' : '');
+  $('#btnResult').textContent = sub.result
+    ? '🏁 '+resText(sub.result)+' · изменить'
+    : '🏁 Экзамен завершен';
+  $('#matPct').textContent = Math.round(c.matPct);
+  $('#doneCnt').textContent = c.done;
+  $('#leftCnt').textContent = c.remaining;
+  $('#leftPct').textContent = Math.round(100 - c.matPct) + '%';
+  $('#fill').style.width = c.matPct + '%';
+  $('#planFlag').style.left = Math.min(100, c.expected / c.total * 100) + '%';
+  $('#matHint').innerHTML = '▲ план на сегодня: <b>'+c.expected+'</b> из '+c.total
+    + ' · факт: <b>'+c.done+'</b> ('+(c.dev>=0?'+':'')+c.dev+' '+plural(Math.abs(c.dev),'вопрос','вопроса','вопросов')+')';
+  document.body.classList.toggle('alldone', c.done >= c.total);
+  const dv = $('#devVal');
+  dv.textContent = (c.devPct>0?'+':'') + c.devPct + '%';
+  dv.className = 'dev-big ' + (c.devPct>0?'plus':c.devPct<0?'minus':'');
+  $('#devNote').textContent = c.devPct>0 ? 'опережаешь план' : c.devPct<0 ? 'отстаёшь от плана' : 'идёшь точно по плану';
+  $('#needle').style.left = (50 + Math.max(-60,Math.min(60,c.devPct))/60*50) + '%';
+  $('#paceNote').innerHTML = c.pace
+    ? 'Твой темп: <b>'+c.pace.rate.toFixed(1)+' вопр./день</b>. Финиш: <b>'
+      + c.pace.proj.toLocaleDateString('ru-RU',{day:'numeric',month:'short'}) + '</b> — '
+      + (c.pace.diff>0 ? 'запас '+c.pace.diff+' '+plural(c.pace.diff,'день','дня','дней')
+        : c.pace.diff<0 ? '⚠ опоздание на '+(-c.pace.diff)+' '+plural(-c.pace.diff,'день','дня','дней')
+        : 'ровно в срок')
+    : 'Отметь первые вопросы — посчитаем темп и прогноз финиша.';
+  $('#hoursBig').textContent = c.hoursLeft;
+  $('#tDaysLeft').textContent = c.daysLeft + ' из ' + c.studyDays;
+  $('#minPerQ').textContent = c.minPerQ ? c.minPerQ + ' мин' : '—';
+  $('#perDayVal').textContent = c.perDay;
+  $('#reqNow').textContent = c.remaining === 0 ? 'готово ✓' : c.reqNow + '/день';
+  $('#elapsedTxt').textContent = 'прошло '+Math.round(c.timePct)+'% времени ('+c.elapsed+' из '+c.studyDays+' '+plural(c.studyDays,'дня','дней','дней')+')';
+  $('#tFill').style.width = c.timePct + '%';
+  $('#cAll').textContent = c.total; $('#cTodo').textContent = c.remaining; $('#cDone').textContent = c.done;
+  updateVisCount(c);
+  renderChart(c, !!animateChart);
+  if(c.done >= c.total && !celebrated){ celebrated = true; confetti(); }
+  if(c.done < c.total) celebrated = false;
+}
+
+/* ═══════════ график «план × факт» ═══════════ */
+function renderChart(c, animate){
+  const W=660, H=224, pl=46, pr=18, pt=22, pb=32;
+  const iw=W-pl-pr, ih=H-pt-pb, N=c.studyDays, T=c.total;
+  const X=i=>pl+i/N*iw, Y=v=>pt+ih-(v/T)*ih;
+  const buckets=new Array(N+1).fill(0);
+  for(const ts of Object.values(c.sub.done||{})){
+    const d=new Date(ts), dd=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+    const k=Math.max(0, Math.min(N, dBet(c.start, dd)));
+    buckets[k]++;
+  }
+  let cum=0; const pts=[[0,0]];
+  for(let i=0;i<=c.elapsed;i++){ cum+=buckets[i]; pts.push([i,cum]); }
+  const line='M'+pts.map(p=>X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1)).join(' L');
+  const area=line+' L'+X(c.elapsed).toFixed(1)+' '+Y(0)+' L'+X(0)+' '+Y(0)+' Z';
+  let grid='';
+  [0.25,0.5,0.75,1].forEach(f=>{
+    grid+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(T*f).toFixed(1)+'" y2="'+Y(T*f).toFixed(1)
+      +'" stroke="rgba(23,32,47,.12)" stroke-dasharray="3 5"/>';
+    if(f===0.5||f===1) grid+='<text x="'+(pl-6)+'" y="'+(Y(T*f)+3).toFixed(1)
+      +'" text-anchor="end" font-family="JetBrains Mono" font-size="10" fill="#5b6577">'+Math.round(T*f)+'</text>';
+  });
+  const tx=Math.min(X(c.elapsed), W-pr-30);
+  const ex=Math.min(Math.max(X(c.elapsed), pl+12), W-pr-14);
+  const svg =
+    '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">'
+    + grid
+    + '<path class="fadearea" d="'+area+'" fill="rgba(255,210,63,.42)"/>'
+    + '<line x1="'+pl+'" y1="'+(pt+ih)+'" x2="'+(W-pr)+'" y2="'+(pt+ih)+'" stroke="#17202f" stroke-width="2"/>'
+    + '<line x1="'+pl+'" y1="'+pt+'" x2="'+pl+'" y2="'+(pt+ih)+'" stroke="#17202f" stroke-width="2"/>'
+    + '<line x1="'+X(0)+'" y1="'+Y(0)+'" x2="'+X(N)+'" y2="'+Y(T)+'" stroke="rgba(23,32,47,.55)" stroke-width="2.5" stroke-dasharray="7 7"/>'
+    + '<line x1="'+X(c.elapsed)+'" y1="'+pt+'" x2="'+X(c.elapsed)+'" y2="'+(pt+ih)+'" stroke="#e5484d" stroke-width="2" stroke-dasharray="4 5"/>'
+    + '<text x="'+tx+'" y="'+(pt-8)+'" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#e5484d">сегодня</text>'
+    + '<path class="anim" d="'+line+'" fill="none" stroke="#17202f" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>'
+    + '<circle cx="'+X(c.elapsed)+'" cy="'+Y(cum)+'" r="5.5" fill="#17202f" stroke="#fffdf6" stroke-width="2.5"/>'
+    + '<text x="'+ex+'" y="'+Math.max(pt+10, Y(cum)-12)+'" text-anchor="middle" font-family="JetBrains Mono" font-size="11" font-weight="600" fill="#17202f">'+cum+'</text>'
+    + '<text x="'+pl+'" y="'+(H-8)+'" font-family="JetBrains Mono" font-size="10" fill="#5b6577">'+fmt(c.sub.start)+' · старт</text>'
+    + '<text x="'+(W-pr)+'" y="'+(H-8)+'" text-anchor="end" font-family="JetBrains Mono" font-size="10" fill="#5b6577">'+fmt(c.sub.exam)+' · экзамен</text>'
+    + '</svg>';
+  const box = $('#chartBox');
+  box.innerHTML = svg;
+  if(animate){
+    const p = box.querySelector('.anim');
+    if(p){
+      const len = p.getTotalLength();
+      if(len > 1){
+        p.style.strokeDasharray = len; p.style.strokeDashoffset = len;
+        requestAnimationFrame(()=>{ p.style.transition='stroke-dashoffset .9s ease'; p.style.strokeDashoffset='0'; });
+      }
+    }
+  }
+}
+
+/* ═══════════ вопросы ═══════════ */
+function renderChips(){
+  const sub = active(); if(!sub) return;
+  const g = $('#qgrid'); g.innerHTML = ''; g.dataset.f = filter;
+  const frag = document.createDocumentFragment();
+  for(let i=1;i<=sub.total;i++){
+    const b=document.createElement('button'); b.type='button'; b.className='chip'; b.dataset.i=i;
+    b.textContent=i;
+    if(sub.done[i]!=null) b.classList.add('done');
+    b.setAttribute('aria-pressed', sub.done[i]!=null); b.title='Вопрос №'+i;
+    frag.appendChild(b);
+  }
+  g.appendChild(frag);
+  updateVisCount(calc(sub));
+}
+$('#qgrid').addEventListener('click', e=>{
+  const chip=e.target.closest('.chip'); if(chip) toggleChip(chip);
+});
+function toggleChip(chip){
+  const sub = active(), i = +chip.dataset.i;
+  if(sub.done[i]!=null){ delete sub.done[i]; chip.classList.remove('done'); }
+  else{
+    sub.done[i]=Date.now(); chip.classList.add('done','pop');
+    setTimeout(()=>chip.classList.remove('pop'),450);
+  }
+  chip.setAttribute('aria-pressed', sub.done[i]!=null);
+  saveDB(); renderStats(false);
+}
+function markNext(){
+  const all=[...document.querySelectorAll('#qgrid .chip')];
+  const chip=all.find(c=>!c.classList.contains('done')&&c.offsetParent!==null) || all.find(c=>!c.classList.contains('done'));
+  if(!chip) return;
+  toggleChip(chip); chip.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+function undoLast(){
+  const sub=active(), entries=Object.entries(sub.done); if(!entries.length) return;
+  entries.sort((a,b)=>b[1]-a[1]); const i=+entries[0][0];
+  delete sub.done[i]; saveDB(); renderStats(false); renderChips();
+  const chip=$('#qgrid .chip[data-i="'+i+'"]'); if(chip) chip.scrollIntoView({block:'nearest'});
+}
+function updateVisCount(c){
+  const vis = filter==='all' ? c.total : filter==='todo' ? c.remaining : c.done;
+  $('#visCount').textContent = 'показано: ' + vis;
+}
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on'); filter=t.dataset.f; $('#qgrid').dataset.f=filter;
+  const sub=active(); if(sub) updateVisCount(calc(sub));
+}));
+$('#btnNext').addEventListener('click', markNext);
+$('#btnUndo').addEventListener('click', undoLast);
+$('#btnClear').addEventListener('click', ()=>{
+  const sub=active();
+  if(!Object.keys(sub.done).length) return;
+  if(confirm('Снять все отметки по предмету «'+sub.name+'»?')){ sub.done={}; saveDB(); renderStats(false); renderChips(); }
+});
+
+/* ═══════════ имя предмета и настройка ═══════════ */
+$('#examName').addEventListener('input', e=>{ const sub=active(); if(sub){ sub.name=e.target.value; saveDB(); } });
+$('#btnEdit').addEventListener('click', ()=>{
+  const sub=active(); if(!sub) return;
+  $('#eName').value=sub.name; $('#eExam').value=sub.exam; $('#eStart').value=sub.start; $('#eTotal').value=sub.total;
+  $('#dlg').showModal();
+});
+$('#btnCancel').addEventListener('click', ()=>$('#dlg').close());
+$('#dlg').addEventListener('click', e=>{ if(e.target===$('#dlg')) $('#dlg').close(); });
+$('#dlgForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const sub=active(); if(!sub) return;
+  const n=Math.min(2000,Math.max(1,Math.round(+$('#eTotal').value)));
+  if(dBet(pD($('#eStart').value), pD($('#eExam').value)) < 1){ alert('Дата экзамена должна быть позже даты старта.'); return; }
+  Object.keys(sub.done).forEach(k=>{ if(+k>n) delete sub.done[k]; });
+  sub.name=$('#eName').value.trim()||'Экзамен'; sub.start=$('#eStart').value; sub.exam=$('#eExam').value; sub.total=n;
+  saveDB(); $('#dlg').close(); showDash();
+});
+$('#btnMarksReset').addEventListener('click', ()=>{
+  const sub=active();
+  if(confirm('Снять все отметки по предмету «'+sub.name+'»?')){
+    sub.done={}; saveDB(); $('#dlg').close(); showDash();
+  }
+});
+$('#btnDeleteSubj').addEventListener('click', ()=>{
+  const sub=active(); if(!sub) return;
+  $('#dlg').close(); deleteSubject(sub.id);
+});
+
+/* ═══════════ экспорт / импорт / сброс ═══════════ */
+$('#btnExport').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download='sessiya-backup-'+iso(today0())+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),500);
+});
+function normalizeSub(s){
+  const done={};
+  if(s.done && typeof s.done==='object')
+    for(const k in s.done){ const n=+k; if(Number.isInteger(n)&&n>=1) done[n]=+s.done[k]||Date.now(); }
+  let result=null;
+  if(s.result && typeof s.result==='object' && ['pending','grade','score'].includes(s.result.type))
+    result={type:s.result.type, value:s.result.value??null, at:+s.result.at||Date.now()};
+  return { id:(typeof s.id==='string'&&s.id)?s.id:genId(), name:String(s.name||'Экзамен').slice(0,60),
+           start:String(s.start), exam:String(s.exam),
+           total:Math.min(2000,Math.max(1,Math.round(+s.total||1))), done, result, createdAt:+s.createdAt||Date.now() };
+}
+$('#btnImport').addEventListener('click', ()=>$('#fileImport').click());
+$('#fileImport').addEventListener('change', e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const obj=JSON.parse(r.result);
+      let incoming;
+      if(obj && Array.isArray(obj.subjects)) incoming={version:2,view:'subjects',activeId:obj.activeId||null,subjects:obj.subjects,meta:{}};
+      else if(obj && obj.exam) incoming={version:2,view:'subjects',activeId:null,subjects:[obj],meta:{}};
+      else throw new Error('bad');
+      const re=/^\d{4}-\d{2}-\d{2}$/;
+      incoming.subjects=incoming.subjects.filter(s=>s&&re.test(s.start)&&re.test(s.exam)&&+s.total>0).map(normalizeSub);
+      if(!incoming.subjects.length) throw new Error('empty');
+      if(!confirm('Импортировать '+incoming.subjects.length+' '+plural(incoming.subjects.length,'предмет','предмета','предметов')+'? Текущие данные будут заменены.')) return;
+      db=incoming;
+      db.activeId=db.subjects.find(s=>s.id===db.activeId)?db.activeId:db.subjects[0].id;
+      db.view='dash';
+      saveDB(); route();
+    }catch(err){ alert('Не удалось прочитать файл — похоже, это не резервная копия «Сессии».'); }
+    e.target.value='';
+  };
+  r.readAsText(f);
+});
+$('#btnWipe').addEventListener('click', ()=>{
+  if(confirm('Удалить ВСЕ предметы и отметки с этого устройства безвозвратно?')){
+    localStorage.removeItem(KEY);
+    db={version:2,view:'subjects',activeId:null,subjects:[],meta:{}};
+    route();
+    if(sb && cloudUser) pushCloudNow();
+  }
+});
+
+/* ═══════════ клавиатура ═══════════ */
+document.addEventListener('keydown', e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT'
+     ||$('#dlg').open||$('#authDlg').open||$('#resultDlg').open) return;
+  if($('#dash').hidden) return;
+  if(e.code==='KeyN'||e.code==='Space'){ e.preventDefault(); markNext(); }
+});
+
+/* ═══════════ конфетти ═══════════ */
+function confetti(){
+  const colors=['#ffd23f','#17202f','#e5484d','#2f6fed','#1e9e5a'];
+  for(let i=0;i<90;i++){
+    const s=document.createElement('span'); s.className='cf';
+    const size=6+Math.random()*7;
+    s.style.cssText='left:'+(Math.random()*100)+'vw;width:'+size+'px;height:'+(size*1.4)+'px;background:'
+      +colors[i%colors.length]+';animation-duration:'+(1.4+Math.random()*1.4)+'s;animation-delay:'+(Math.random()*0.4)
+      +'s;transform:rotate('+(Math.random()*360)+'deg)';
+    document.body.appendChild(s); setTimeout(()=>s.remove(),3200);
+  }
+}
+
+/* ═══════════ старт ═══════════ */
+route();
+initCloud();
+setInterval(()=>{ if(!$('#dash').hidden && active()) renderStats(false); }, 60000);
+</script>
+</body>
+</html>
