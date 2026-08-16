@@ -124,6 +124,13 @@ input{font-family:inherit}
 
 /* карточки предметов — под календарём */
 .subj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(262px,1fr));gap:18px}
+.subj-group{margin-bottom:24px}
+.subj-group-title{display:flex;align-items:center;gap:10px;margin-bottom:14px;cursor:pointer;font:700 13px 'Unbounded';letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-soft);transition:.15s}
+.subj-group-title:hover{color:var(--ink)}
+.subj-group-title::before{content:'';width:8px;height:8px;background:var(--yellow);border:2px solid var(--ink);border-radius:2px;transform:rotate(45deg);flex:none}
+.subj-group-title .arrow{margin-left:auto;font-size:14px;transition:transform .2s}
+.subj-group.collapsed .subj-card-wrap{display:none}
+.subj-group.collapsed .arrow{transform:rotate(-90deg)}
 .subj-card{background:var(--card);border:2px solid var(--ink);border-radius:12px;padding:20px;position:relative;cursor:pointer;
   box-shadow:6px 7px 0 rgba(23,32,47,.1);transition:transform .15s,box-shadow .15s;animation:rise .5s both}
 .subj-card:hover{transform:translate(-3px,-3px);box-shadow:9px 10px 0 rgba(23,32,47,.15)}
@@ -375,7 +382,22 @@ footer button.danger-l:hover{color:var(--red)}
       <div class="up-list" id="upList"></div>
     </aside>
 
-    <div class="subj-grid" id="subjGrid"></div>
+    <div class="subj-grid" id="subjGrid">
+      <div class="subj-group" id="groupPrep">
+        <div class="subj-group-title" onclick="toggleGroup('prep')">
+          <span>Подготовка</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="subj-card-wrap" id="prepList"></div>
+      </div>
+      <div class="subj-group" id="groupDone">
+        <div class="subj-group-title" onclick="toggleGroup('done')">
+          <span>Завершенные</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="subj-card-wrap" id="doneList"></div>
+      </div>
+    </div>
   </section>
 
   <!-- ЭКРАН СОЗДАНИЯ ПРЕДМЕТА -->
@@ -574,7 +596,12 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 /* ═══════════ база и утилиты ═══════════ */
 const $ = s => document.querySelector(s);
 const KEY = 'sessiya-db-v2', KEY_OLD = 'sessiya-state-v1';
+let groupStates = { prep: true, done: true };
 let db = loadDB(), filter = 'all', celebrated = false, toastTimer = null;
+// Восстанавливаем состояние групп из сохраненных данных
+if(db.meta && db.meta.groupStates){
+  groupStates = { ...groupStates, ...db.meta.groupStates };
+}
 let calYear = null, calMonth = null;
 
 const pD = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
@@ -619,6 +646,7 @@ function loadDB(){
 function saveDB(silent){
   db.meta = db.meta || {};
   db.meta.updated = Date.now();
+  db.meta.groupStates = groupStates;
   try{
     localStorage.setItem(KEY, JSON.stringify(db));
     if(!silent) flashToast('✓ сохранено');
@@ -939,18 +967,40 @@ function renderUpcoming(){
 }
 
 /* ═══════════ экран предметов ═══════════ */
+function toggleGroup(group) {
+  groupStates[group] = !groupStates[group];
+  const grpEl = $('#group' + (group === 'prep' ? 'Prep' : 'Done'));
+  if (groupStates[group]) {
+    grpEl.classList.remove('collapsed');
+  } else {
+    grpEl.classList.add('collapsed');
+  }
+  saveDB();
+}
 function renderSubjects(){
-  const grid = $('#subjGrid'); grid.innerHTML = '';
-  const sorted = [...db.subjects].sort((a,b)=>pD(a.exam)-pD(b.exam));
-  sorted.forEach((sub,i)=>{
+  const prepList = $('#prepList'); const doneList = $('#doneList');
+  prepList.innerHTML = ''; doneList.innerHTML = '';
+  
+  // Разделяем на подготовку и завершенные
+  const preparing = db.subjects.filter(s => !s.result);
+  const completed = db.subjects.filter(s => s.result);
+  
+  // Сортировка: подготовка - от ближайшего к дальнему
+  preparing.sort((a,b) => pD(a.exam) - pD(b.exam));
+  // Сортировка: завершенные - от свежих к старым (по дате экзамена)
+  completed.sort((a,b) => pD(b.exam) - pD(a.exam));
+  
+  let idx = 0;
+  
+  // Рендерим карточки подготовки
+  preparing.forEach(sub => {
     const c = calc(sub);
     const card = document.createElement('article');
-    card.className = 'subj-card'; card.style.animationDelay = (i*0.06)+'s';
+    card.className = 'subj-card'; card.style.animationDelay = (idx*0.06)+'s';
     const devCls = c.devPct>0 ? 'up' : c.devPct<0 ? 'down' : 'flat';
     const devTxt = c.devPct>0 ? '▲ +'+c.devPct+'%' : c.devPct<0 ? '▼ '+c.devPct+'%' : '● по плану';
     const daysTxt = c.daysLeft === 0
-      ? (sub.result ? 'экзамен завершён'
-         : (c.remaining === 0 ? 'экзамен сегодня · всё готово' : '<span class="warn">⚠ срок истёк, осталось '+c.remaining+'</span>'))
+      ? (c.remaining === 0 ? 'экзамен сегодня · всё готово' : '<span class="warn">⚠ срок истёк, осталось '+c.remaining+'</span>')
       : c.daysLeft+' '+plural(c.daysLeft,'день','дня','дней')+' до экзамена';
     
     // Всегда показываем проценты подготовки
@@ -958,10 +1008,40 @@ function renderSubjects(){
       +'<div class="subj-track"><div style="width:'+c.matPct.toFixed(1)+'%"></div></div>';
 
     // Бейдж отклонения от графика — только для незавершённых экзаменов
-    let devBadgeHtml = '';
-    if(!sub.result){
-      devBadgeHtml = '<span class="subj-badge '+devCls+'">'+devTxt+'</span>';
-    }
+    const devBadgeHtml = '<span class="subj-badge '+devCls+'">'+devTxt+'</span>';
+
+    card.innerHTML =
+      '<button type="button" class="subj-flag" title="Результат экзамена">🏁</button>'
+      +'<button type="button" class="subj-del" title="Удалить предмет">×</button>'
+      +'<h3><span class="subj-dot" style="background:'+subColor(sub)+'"></span>'+esc(sub.name)+'</h3>'
+      +pctHtml
+      +'<div class="subj-meta">'
+        +'<span>📅 '+fmtY(sub.exam)+'</span>'
+        +'<span>'+daysTxt+'</span>'
+        +'<span>'+c.done+' из '+c.total+' вопр. · '+c.perDay+'/день по плану</span>'
+      +'</div>'
+      +devBadgeHtml
+      +'<span class="go">Открыть →</span>';
+    card.addEventListener('click', e=>{
+      if(e.target.closest('.subj-del')||e.target.closest('.subj-flag')) return;
+      openSubject(sub.id);
+    });
+    card.querySelector('.subj-del').addEventListener('click', e=>{ e.stopPropagation(); deleteSubject(sub.id); });
+    card.querySelector('.subj-flag').addEventListener('click', e=>{ e.stopPropagation(); openResultDlg(sub.id); });
+    prepList.appendChild(card);
+    idx++;
+  });
+  
+  // Рендерим карточки завершенных
+  completed.forEach(sub => {
+    const c = calc(sub);
+    const card = document.createElement('article');
+    card.className = 'subj-card'; card.style.animationDelay = (idx*0.06)+'s';
+    const daysTxt = 'экзамен завершён';
+    
+    // Всегда показываем проценты подготовки
+    const pctHtml = '<div class="subj-pct">'+Math.round(c.matPct)+'<span>%</span></div>'
+      +'<div class="subj-track"><div style="width:'+c.matPct.toFixed(1)+'%"></div></div>';
 
     // Значок результата — только для завершённых экзаменов
     let resultBadgeHtml = '';
@@ -997,11 +1077,8 @@ function renderSubjects(){
         +'<span>'+daysTxt+'</span>'
         +'<span>'+c.done+' из '+c.total+' вопр. · '+c.perDay+'/день по плану</span>'
       +'</div>'
-      +devBadgeHtml
       +resultBadgeHtml
-      +(sub.result
-        ? ' <button type="button" class="subj-badge res'+(sub.result.type==='pending'?' pending':'')+'" data-resbtn title="Изменить результат" style="margin-left:6px">🏁 '+resText(sub.result)+'</button>'
-        : '')
+      +' <button type="button" class="subj-badge res'+(sub.result.type==='pending'?' pending':'')+'" data-resbtn title="Изменить результат" style="margin-left:6px">🏁 '+resText(sub.result)+'</button>'
       +'<span class="go">Открыть →</span>';
     card.addEventListener('click', e=>{
       if(e.target.closest('.subj-del')||e.target.closest('.subj-flag')||e.target.closest('[data-resbtn]')) return;
@@ -1011,14 +1088,24 @@ function renderSubjects(){
     card.querySelector('.subj-flag').addEventListener('click', e=>{ e.stopPropagation(); openResultDlg(sub.id); });
     const rb=card.querySelector('[data-resbtn]');
     if(rb) rb.addEventListener('click', e=>{ e.stopPropagation(); openResultDlg(sub.id); });
-    grid.appendChild(card);
+    doneList.appendChild(card);
+    idx++;
   });
+  
+  // Кнопка добавления нового предмета
   const add = document.createElement('button');
   add.type='button'; add.className='subj-add';
-  add.style.animationDelay = (sorted.length*0.06)+'s';
+  add.style.animationDelay = (idx*0.06)+'s';
   add.innerHTML = '<span>＋</span>Новый предмет';
   add.addEventListener('click', ()=>showSetup('Новый предмет'));
-  grid.appendChild(add);
+  prepList.appendChild(add);
+  
+  // Восстанавливаем состояние групп
+  if (!groupStates.prep) $('#groupPrep').classList.add('collapsed');
+  else $('#groupPrep').classList.remove('collapsed');
+  if (!groupStates.done) $('#groupDone').classList.add('collapsed');
+  else $('#groupDone').classList.remove('collapsed');
+  
   const n = db.subjects.length;
   $('#subjCount').textContent = n ? n+' '+plural(n,'предмет','предмета','предметов') : '';
 }
