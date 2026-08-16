@@ -957,7 +957,13 @@ function renderSubjects(){
     const pctHtml = '<div class="subj-pct">'+Math.round(c.matPct)+'<span>%</span></div>'
       +'<div class="subj-track"><div style="width:'+c.matPct.toFixed(1)+'%"></div></div>';
 
-    // Вместо бейджа отклонения показываем значок результата (если есть)
+    // Бейдж отклонения от графика — только для незавершённых экзаменов
+    let devBadgeHtml = '';
+    if(!sub.result){
+      devBadgeHtml = '<span class="subj-badge '+devCls+'">'+devTxt+'</span>';
+    }
+
+    // Значок результата — только для завершённых экзаменов
     let resultBadgeHtml = '';
     if(sub.result && sub.result.type === 'pending'){
       resultBadgeHtml = '<span class="subj-badge res pending" style="cursor:default">⏳</span>';
@@ -991,6 +997,7 @@ function renderSubjects(){
         +'<span>'+daysTxt+'</span>'
         +'<span>'+c.done+' из '+c.total+' вопр. · '+c.perDay+'/день по плану</span>'
       +'</div>'
+      +devBadgeHtml
       +resultBadgeHtml
       +(sub.result
         ? ' <button type="button" class="subj-badge res'+(sub.result.type==='pending'?' pending':'')+'" data-resbtn title="Изменить результат" style="margin-left:6px">🏁 '+resText(sub.result)+'</button>'
