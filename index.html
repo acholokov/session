@@ -952,12 +952,50 @@ function renderSubjects(){
       ? (sub.result ? 'экзамен завершён'
          : (c.remaining === 0 ? 'экзамен сегодня · всё готово' : '<span class="warn">⚠ срок истёк, осталось '+c.remaining+'</span>'))
       : c.daysLeft+' '+plural(c.daysLeft,'день','дня','дней')+' до экзамена';
+    
+    // Определяем содержимое карточки: проценты или значок результата
+    let resultHtml = '';
+    if(sub.result && sub.result.type === 'pending'){
+      // Ожидание результатов — песочные часы
+      resultHtml = '<div class="result-badge pending" style="width:70px;height:70px;margin:8px auto;font-size:32px">⏳</div>'
+        +'<div class="note" style="text-align:center;margin-bottom:10px">Ожидание результатов</div>';
+    } else if(sub.result && sub.result.type === 'grade'){
+      // Оценка (2-5)
+      const grade = +sub.result.value;
+      if(grade >= 4){
+        resultHtml = '<div class="result-badge good" style="width:70px;height:70px;margin:8px auto;font-size:32px">✓</div>'
+          +'<div class="note" style="text-align:center;margin-bottom:10px">Оценка: '+grade+'</div>';
+      } else if(grade === 3){
+        resultHtml = '<div class="result-badge warn" style="width:70px;height:70px;margin:8px auto;font-size:32px">!</div>'
+          +'<div class="note" style="text-align:center;margin-bottom:10px">Оценка: '+grade+'</div>';
+      } else {
+        resultHtml = '<div class="result-badge bad" style="width:70px;height:70px;margin:8px auto;font-size:32px">✕</div>'
+          +'<div class="note" style="text-align:center;margin-bottom:10px">Оценка: '+grade+'</div>';
+      }
+    } else if(sub.result && sub.result.type === 'score'){
+      // 100-балльная система
+      const score = +sub.result.value;
+      if(score >= 80){
+        resultHtml = '<div class="result-badge good" style="width:70px;height:70px;margin:8px auto;font-size:32px">✓</div>'
+          +'<div class="note" style="text-align:center;margin-bottom:10px">'+score+' / 100</div>';
+      } else if(score >= 60){
+        resultHtml = '<div class="result-badge warn" style="width:70px;height:70px;margin:8px auto;font-size:32px">!</div>'
+          +'<div class="note" style="text-align:center;margin-bottom:10px">'+score+' / 100</div>';
+      } else {
+        resultHtml = '<div class="result-badge bad" style="width:70px;height:70px;margin:8px auto;font-size:32px">✕</div>'
+          +'<div class="note" style="text-align:center;margin-bottom:10px">'+score+' / 100</div>';
+      }
+    } else {
+      // Нет результата — показываем проценты как обычно
+      resultHtml = '<div class="subj-pct">'+Math.round(c.matPct)+'<span>%</span></div>'
+        +'<div class="subj-track"><div style="width:'+c.matPct.toFixed(1)+'%"></div></div>';
+    }
+    
     card.innerHTML =
       '<button type="button" class="subj-flag" title="Результат экзамена">🏁</button>'
       +'<button type="button" class="subj-del" title="Удалить предмет">×</button>'
       +'<h3><span class="subj-dot" style="background:'+subColor(sub)+'"></span>'+esc(sub.name)+'</h3>'
-      +'<div class="subj-pct">'+Math.round(c.matPct)+'<span>%</span></div>'
-      +'<div class="subj-track"><div style="width:'+c.matPct.toFixed(1)+'%"></div></div>'
+      +resultHtml
       +'<div class="subj-meta">'
         +'<span>📅 '+fmtY(sub.exam)+'</span>'
         +'<span>'+daysTxt+'</span>'
