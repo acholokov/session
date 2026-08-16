@@ -953,57 +953,47 @@ function renderSubjects(){
          : (c.remaining === 0 ? 'экзамен сегодня · всё готово' : '<span class="warn">⚠ срок истёк, осталось '+c.remaining+'</span>'))
       : c.daysLeft+' '+plural(c.daysLeft,'день','дня','дней')+' до экзамена';
     
-    // Определяем содержимое карточки: проценты или значок результата
-    let resultHtml = '';
+    // Всегда показываем проценты подготовки
+    const pctHtml = '<div class="subj-pct">'+Math.round(c.matPct)+'<span>%</span></div>'
+      +'<div class="subj-track"><div style="width:'+c.matPct.toFixed(1)+'%"></div></div>';
+
+    // Вместо бейджа отклонения показываем значок результата (если есть)
+    let resultBadgeHtml = '';
     if(sub.result && sub.result.type === 'pending'){
-      // Ожидание результатов — песочные часы
-      resultHtml = '<div class="result-badge pending" style="width:70px;height:70px;margin:8px auto;font-size:32px">⏳</div>'
-        +'<div class="note" style="text-align:center;margin-bottom:10px">Ожидание результатов</div>';
+      resultBadgeHtml = '<span class="subj-badge res pending" style="cursor:default">⏳</span>';
     } else if(sub.result && sub.result.type === 'grade'){
-      // Оценка (2-5)
       const grade = +sub.result.value;
       if(grade >= 4){
-        resultHtml = '<div class="result-badge good" style="width:70px;height:70px;margin:8px auto;font-size:32px">✓</div>'
-          +'<div class="note" style="text-align:center;margin-bottom:10px">Оценка: '+grade+'</div>';
+        resultBadgeHtml = '<span class="subj-badge res" style="background:#e7f4ec;border-color:var(--green);color:var(--green);cursor:default">✓</span>';
       } else if(grade === 3){
-        resultHtml = '<div class="result-badge warn" style="width:70px;height:70px;margin:8px auto;font-size:32px">!</div>'
-          +'<div class="note" style="text-align:center;margin-bottom:10px">Оценка: '+grade+'</div>';
+        resultBadgeHtml = '<span class="subj-badge res" style="background:#fff3c2;border-color:#e8a013;color:#e8a013;cursor:default">!</span>';
       } else {
-        resultHtml = '<div class="result-badge bad" style="width:70px;height:70px;margin:8px auto;font-size:32px">✕</div>'
-          +'<div class="note" style="text-align:center;margin-bottom:10px">Оценка: '+grade+'</div>';
+        resultBadgeHtml = '<span class="subj-badge res" style="background:#fdecec;border-color:var(--red);color:var(--red);cursor:default">✕</span>';
       }
     } else if(sub.result && sub.result.type === 'score'){
-      // 100-балльная система
       const score = +sub.result.value;
       if(score >= 80){
-        resultHtml = '<div class="result-badge good" style="width:70px;height:70px;margin:8px auto;font-size:32px">✓</div>'
-          +'<div class="note" style="text-align:center;margin-bottom:10px">'+score+' / 100</div>';
+        resultBadgeHtml = '<span class="subj-badge res" style="background:#e7f4ec;border-color:var(--green);color:var(--green);cursor:default">✓</span>';
       } else if(score >= 60){
-        resultHtml = '<div class="result-badge warn" style="width:70px;height:70px;margin:8px auto;font-size:32px">!</div>'
-          +'<div class="note" style="text-align:center;margin-bottom:10px">'+score+' / 100</div>';
+        resultBadgeHtml = '<span class="subj-badge res" style="background:#fff3c2;border-color:#e8a013;color:#e8a013;cursor:default">!</span>';
       } else {
-        resultHtml = '<div class="result-badge bad" style="width:70px;height:70px;margin:8px auto;font-size:32px">✕</div>'
-          +'<div class="note" style="text-align:center;margin-bottom:10px">'+score+' / 100</div>';
+        resultBadgeHtml = '<span class="subj-badge res" style="background:#fdecec;border-color:var(--red);color:var(--red);cursor:default">✕</span>';
       }
-    } else {
-      // Нет результата — показываем проценты как обычно
-      resultHtml = '<div class="subj-pct">'+Math.round(c.matPct)+'<span>%</span></div>'
-        +'<div class="subj-track"><div style="width:'+c.matPct.toFixed(1)+'%"></div></div>';
     }
-    
+
     card.innerHTML =
       '<button type="button" class="subj-flag" title="Результат экзамена">🏁</button>'
       +'<button type="button" class="subj-del" title="Удалить предмет">×</button>'
       +'<h3><span class="subj-dot" style="background:'+subColor(sub)+'"></span>'+esc(sub.name)+'</h3>'
-      +resultHtml
+      +pctHtml
       +'<div class="subj-meta">'
         +'<span>📅 '+fmtY(sub.exam)+'</span>'
         +'<span>'+daysTxt+'</span>'
         +'<span>'+c.done+' из '+c.total+' вопр. · '+c.perDay+'/день по плану</span>'
       +'</div>'
-      +'<span class="subj-badge '+devCls+'">'+devTxt+'</span>'
+      +resultBadgeHtml
       +(sub.result
-        ? ' <button type="button" class="subj-badge res'+(sub.result.type==='pending'?' pending':'')+'" data-resbtn title="Изменить результат">🏁 '+resText(sub.result)+'</button>'
+        ? ' <button type="button" class="subj-badge res'+(sub.result.type==='pending'?' pending':'')+'" data-resbtn title="Изменить результат" style="margin-left:6px">🏁 '+resText(sub.result)+'</button>'
         : '')
       +'<span class="go">Открыть →</span>';
     card.addEventListener('click', e=>{
