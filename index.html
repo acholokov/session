@@ -210,6 +210,12 @@ body.alldone .stamp{animation:stampIn .5s cubic-bezier(.2,1.6,.4,1) forwards}
   color:var(--ink-soft);text-transform:uppercase;margin-bottom:14px}
 .pace{font-size:14px;border-top:2px dashed rgba(23,32,47,.2);padding-top:12px}
 .pace b{background:linear-gradient(transparent 60%,var(--yellow-soft) 60%)}
+.result-badge{display:grid;place-items:center;width:80px;height:80px;margin:10px auto;border-radius:50%;
+  border:3px solid var(--ink);box-shadow:4px 4px 0 rgba(23,32,47,.15);font-size:42px;line-height:1}
+.result-badge.good{background:#e7f4ec;border-color:var(--green);color:var(--green)}
+.result-badge.warn{background:#fff3c2;border-color:#e8a013;color:#e8a013}
+.result-badge.bad{background:#fdecec;border-color:var(--red);color:var(--red)}
+.result-badge.pending{background:#fff;border-color:var(--ink-soft);color:var(--ink-soft)}
 
 /* ── время ────────────────────────────── */
 .hours-big{font:900 clamp(40px,5vw,56px)/1 'Unbounded';margin:2px 0 4px}
@@ -416,11 +422,14 @@ footer button.danger-l:hover{color:var(--red)}
 
       <article class="card s5">
         <div class="ct">Run rate<span class="n">02</span></div>
-        <div class="dev-big" id="devVal">0%</div>
-        <div class="note" id="devNote"></div>
-        <div class="gauge"><div class="mid"></div><div class="needle" id="needle"></div></div>
-        <div class="gauge-lbl"><span>← позади</span><span>по плану</span><span>впереди →</span></div>
-        <div class="pace" id="paceNote"></div>
+        <div id="runRateContent">
+          <div class="dev-big" id="devVal">0%</div>
+          <div class="note" id="devNote"></div>
+          <div class="gauge"><div class="mid"></div><div class="needle" id="needle"></div></div>
+          <div class="gauge-lbl"><span>← позади</span><span>по плану</span><span>впереди →</span></div>
+          <div class="pace" id="paceNote"></div>
+        </div>
+        <div id="resultBadge" hidden><div class="result-badge" id="resBadgeIcon"></div><div class="note" style="text-align:center;margin-top:8px" id="resBadgeText"></div></div>
       </article>
 
       <article class="card s5">
@@ -1026,6 +1035,74 @@ function renderStats(animateChart){
   $('#btnResult').textContent = sub.result
     ? '🏁 '+resText(sub.result)+' · изменить'
     : '🏁 Экзамен завершен';
+  
+  // Run rate badge или график в зависимости от статуса экзамена
+  const runRateContent = $('#runRateContent');
+  const resultBadge = $('#resultBadge');
+  const resBadgeIcon = $('#resBadgeIcon');
+  const resBadgeText = $('#resBadgeText');
+  
+  if(sub.result && sub.result.type === 'pending'){
+    // Ожидание результатов — песочные часы
+    runRateContent.hidden = true;
+    resultBadge.hidden = false;
+    resBadgeIcon.className = 'result-badge pending';
+    resBadgeIcon.textContent = '⏳';
+    resBadgeText.textContent = 'Ожидание результатов';
+  } else if(sub.result && sub.result.type === 'grade'){
+    // Оценка (2-5) — цветная галочка/предупреждение
+    runRateContent.hidden = true;
+    resultBadge.hidden = false;
+    const grade = +sub.result.value;
+    if(grade >= 4){
+      resBadgeIcon.className = 'result-badge good';
+      resBadgeIcon.textContent = '✓';
+      resBadgeText.textContent = 'Оценка: ' + grade;
+    } else if(grade === 3){
+      resBadgeIcon.className = 'result-badge warn';
+      resBadgeIcon.textContent = '!';
+      resBadgeText.textContent = 'Оценка: ' + grade;
+    } else { // grade <= 2
+      resBadgeIcon.className = 'result-badge bad';
+      resBadgeIcon.textContent = '✕';
+      resBadgeText.textContent = 'Оценка: ' + grade;
+    }
+  } else if(sub.result && sub.result.type === 'score'){
+    // 100-балльная система
+    runRateContent.hidden = true;
+    resultBadge.hidden = false;
+    const score = +sub.result.value;
+    if(score >= 80){ // эквивалент 4-5
+      resBadgeIcon.className = 'result-badge good';
+      resBadgeIcon.textContent = '✓';
+      resBadgeText.textContent = score + ' / 100';
+    } else if(score >= 60){ // эквивалент 3
+      resBadgeIcon.className = 'result-badge warn';
+      resBadgeIcon.textContent = '!';
+      resBadgeText.textContent = score + ' / 100';
+    } else { // < 60, эквивалент 2
+      resBadgeIcon.className = 'result-badge bad';
+      resBadgeIcon.textContent = '✕';
+      resBadgeText.textContent = score + ' / 100';
+    }
+  } else {
+    // Нет результата — показываем run rate как обычно
+    runRateContent.hidden = false;
+    resultBadge.hidden = true;
+    const dv = $('#devVal');
+    dv.textContent = (c.devPct>0?'+':'') + c.devPct + '%';
+    dv.className = 'dev-big ' + (c.devPct>0?'plus':c.devPct<0?'minus':'');
+    $('#devNote').textContent = c.devPct>0 ? 'опережаешь план' : c.devPct<0 ? 'отстаёшь от плана' : 'идёшь точно по плану';
+    $('#needle').style.left = (50 + Math.max(-60,Math.min(60,c.devPct))/60*50) + '%';
+    $('#paceNote').innerHTML = c.pace
+      ? 'Твой темп: <b>'+c.pace.rate.toFixed(1)+' вопр./день</b>. Финиш: <b>'
+        + c.pace.proj.toLocaleDateString('ru-RU',{day:'numeric',month:'short'}) + '</b> — '
+        + (c.pace.diff>0 ? 'запас '+c.pace.diff+' '+plural(c.pace.diff,'день','дня','дней')
+          : c.pace.diff<0 ? '⚠ опоздание на '+(-c.pace.diff)+' '+plural(-c.pace.diff,'день','дня','дней')
+          : 'ровно в срок')
+      : 'Отметь первые вопросы — посчитаем темп и прогноз финиша.';
+  }
+  
   $('#matPct').textContent = Math.round(c.matPct);
   $('#doneCnt').textContent = c.done;
   $('#leftCnt').textContent = c.remaining;
@@ -1035,18 +1112,6 @@ function renderStats(animateChart){
   $('#matHint').innerHTML = '▲ план на сегодня: <b>'+c.expected+'</b> из '+c.total
     + ' · факт: <b>'+c.done+'</b> ('+(c.dev>=0?'+':'')+c.dev+' '+plural(Math.abs(c.dev),'вопрос','вопроса','вопросов')+')';
   document.body.classList.toggle('alldone', c.done >= c.total);
-  const dv = $('#devVal');
-  dv.textContent = (c.devPct>0?'+':'') + c.devPct + '%';
-  dv.className = 'dev-big ' + (c.devPct>0?'plus':c.devPct<0?'minus':'');
-  $('#devNote').textContent = c.devPct>0 ? 'опережаешь план' : c.devPct<0 ? 'отстаёшь от плана' : 'идёшь точно по плану';
-  $('#needle').style.left = (50 + Math.max(-60,Math.min(60,c.devPct))/60*50) + '%';
-  $('#paceNote').innerHTML = c.pace
-    ? 'Твой темп: <b>'+c.pace.rate.toFixed(1)+' вопр./день</b>. Финиш: <b>'
-      + c.pace.proj.toLocaleDateString('ru-RU',{day:'numeric',month:'short'}) + '</b> — '
-      + (c.pace.diff>0 ? 'запас '+c.pace.diff+' '+plural(c.pace.diff,'день','дня','дней')
-        : c.pace.diff<0 ? '⚠ опоздание на '+(-c.pace.diff)+' '+plural(-c.pace.diff,'день','дня','дней')
-        : 'ровно в срок')
-    : 'Отметь первые вопросы — посчитаем темп и прогноз финиша.';
   $('#hoursBig').textContent = c.hoursLeft;
   $('#tDaysLeft').textContent = c.daysLeft + ' из ' + c.studyDays;
   $('#minPerQ').textContent = c.minPerQ ? c.minPerQ + ' мин' : '—';
